@@ -1,7 +1,10 @@
+import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { hebrewLessons } from '@/data/hebrewData';
 import VocabularyCard from '@/components/VocabularyCard';
 import QuizSection from '@/components/QuizSection';
+import HighlightableVerse from '@/components/HighlightableVerse';
+import { getHighlights } from '@/lib/highlights';
 import { ArrowLeft, Check } from 'lucide-react';
 
 export default function HebrewLesson() {
