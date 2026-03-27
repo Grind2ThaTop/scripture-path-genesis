@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { addHighlight, removeHighlight, highlightColors, type HighlightColor, type Highlight } from '@/lib/highlights';
 import { type Testament } from '@/lib/bibleApi';
 import InterlinearText from '@/components/InterlinearText';
+import { CrossReferenceButton } from '@/components/CrossReferencePopup';
 import { Highlighter, Check, X } from 'lucide-react';
 
 interface HighlightableVerseProps {
