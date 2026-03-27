@@ -13,6 +13,7 @@ import GreekLessons from "./pages/GreekLessons";
 import GreekLesson from "./pages/GreekLesson";
 import LifeSituations from "./pages/LifeSituations";
 import BibleReader from "./pages/BibleReader";
+import Highlights from "./pages/Highlights";
 import Progress from "./pages/Progress";
 import NotFound from "./pages/NotFound";
 
