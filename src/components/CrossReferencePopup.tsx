@@ -20,7 +20,7 @@ export function CrossReferenceButton({ bookName, chapter, verse }: CrossReferenc
     <span className="relative inline-block align-middle ml-1">
       <button
         onClick={(e) => { e.stopPropagation(); setOpen(!open); }}
-        className="text-muted-foreground opacity-0 group-hover:opacity-60 transition-opacity hover:text-primary"
+        className="text-primary/70 hover:text-primary transition-colors"
         title={`${refs.length} cross-references`}
       >
         <GitBranch size={12} />
