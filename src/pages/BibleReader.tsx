@@ -234,6 +234,7 @@ export default function BibleReader() {
                     text={restoreNames(verse.text)}
                     reference={ref}
                     source="bible"
+                    testament={selectedBook.testament}
                     existingHighlight={existing}
                     onHighlightChange={() => setAllHighlights(getHighlights())}
                   />
