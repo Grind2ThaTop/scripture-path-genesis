@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { fetchChapter, bibleBooks, otBooks, ntBooks, type BibleBook, type BiblePassage } from '@/lib/bibleApi';
+import { fetchChapter, bibleBooks, otBooks, ntBooks, apBooks, type BibleBook, type BiblePassage, type Testament } from '@/lib/bibleApi';
 import { restoreNames } from '@/lib/restoreNames';
 import { getHighlights, type Highlight } from '@/lib/highlights';
 import HighlightableVerse from '@/components/HighlightableVerse';
@@ -16,7 +16,7 @@ export default function BibleReader() {
   const [allHighlights, setAllHighlights] = useState<Highlight[]>(getHighlights());
   const [showBookList, setShowBookList] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [testament, setTestament] = useState<'OT' | 'NT'>('OT');
+  const [testament, setTestament] = useState<Testament>('OT');
 
   // Init from URL params
   useEffect(() => {
@@ -75,7 +75,8 @@ export default function BibleReader() {
     }
   };
 
-  const filteredBooks = (testament === 'OT' ? otBooks : ntBooks).filter(b =>
+  const booksByTestament = testament === 'OT' ? otBooks : testament === 'NT' ? ntBooks : apBooks;
+  const filteredBooks = booksByTestament.filter(b =>
     b.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -124,9 +125,13 @@ export default function BibleReader() {
         <span className={`text-xs px-2 py-1 rounded border ${
           selectedBook.testament === 'OT'
             ? 'bg-primary/10 text-primary border-primary/20'
-            : 'bg-accent/50 text-accent-foreground border-accent/30'
+            : selectedBook.testament === 'NT'
+            ? 'bg-accent/50 text-accent-foreground border-accent/30'
+            : 'bg-yellow-500/10 text-yellow-300 border-yellow-500/30'
         }`}>
-          {selectedBook.testament === 'OT' ? 'Old Testament · Hebrew' : 'New Testament · Greek'}
+          {selectedBook.testament === 'OT' ? 'Old Testament · Hebrew'
+            : selectedBook.testament === 'NT' ? 'New Testament · Greek'
+            : 'Apocrypha / Extra-Canon'}
         </span>
       </div>
 
@@ -146,23 +151,22 @@ export default function BibleReader() {
           </div>
 
           {/* Testament tabs */}
-          <div className="flex gap-2">
-            <button
-              onClick={() => setTestament('OT')}
-              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                testament === 'OT' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              Old Testament ({otBooks.length})
-            </button>
-            <button
-              onClick={() => setTestament('NT')}
-              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                testament === 'NT' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              New Testament ({ntBooks.length})
-            </button>
+          <div className="flex flex-wrap gap-2">
+            {([
+              { key: 'OT' as Testament, label: 'Old Testament', count: otBooks.length },
+              { key: 'NT' as Testament, label: 'New Testament', count: ntBooks.length },
+              { key: 'AP' as Testament, label: 'Apocrypha & Extra-Canon', count: apBooks.length },
+            ]).map(tab => (
+              <button
+                key={tab.key}
+                onClick={() => setTestament(tab.key)}
+                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                  testament === tab.key ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                {tab.label} ({tab.count})
+              </button>
+            ))}
           </div>
 
           {/* Book grid */}
