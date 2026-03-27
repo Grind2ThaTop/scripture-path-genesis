@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { fetchChapter, bibleBooks, otBooks, ntBooks, type BibleBook, type BiblePassage } from '@/lib/bibleApi';
+import { restoreNames } from '@/lib/restoreNames';
 import { BookOpen, ChevronLeft, ChevronRight, Search, Loader2 } from 'lucide-react';
 
 export default function BibleReader() {
