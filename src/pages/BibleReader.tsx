@@ -194,7 +194,7 @@ export default function BibleReader() {
           <h2 className="font-display text-lg font-bold text-foreground">
             {selectedBook.name} {chapter}
           </h2>
-          <span className="text-xs font-mono text-muted-foreground">KJV</span>
+          <span className="text-xs font-mono text-muted-foreground">KJV · Restored Names</span>
         </div>
 
         {/* Verses */}
