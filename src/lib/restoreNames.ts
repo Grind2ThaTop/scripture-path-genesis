@@ -2,20 +2,31 @@
 // Replaces traditional church renderings with original/restored names
 
 const replacements: [RegExp, string][] = [
-  // Must do multi-word patterns first
-  [/\bthe LORD God\b/g, 'Yahweh Elohim'],
-  [/\bThe LORD God\b/g, 'Yahweh Elohim'],
+  // ===== MULTI-WORD PATTERNS FIRST =====
+
+  // "the LORD God" → "Yahweh Elohim" (the is absorbed — Yahweh is a name, no article)
+  [/\b[Tt]he LORD God\b/g, 'Yahweh Elohim'],
   [/\bTHE LORD GOD\b/g, 'YAHWEH ELOHIM'],
-  [/\bthe Lord GOD\b/g, 'the Master Yahweh'],
-  [/\bthe LORD of hosts\b/g, 'Yahweh of hosts'],
-  [/\bThe LORD of hosts\b/g, 'Yahweh of hosts'],
+
+  // "the Lord GOD" → "Master Yahweh" (Adonai YHWH)
+  [/\b[Tt]he Lord GOD\b/g, 'Master Yahweh'],
+
+  // "the LORD of hosts" → "Yahweh of hosts" (absorb article)
+  [/\b[Tt]he LORD of hosts\b/g, 'Yahweh of hosts'],
   [/\bLORD of hosts\b/g, 'Yahweh of hosts'],
+
+  // "the LORD" alone → "Yahweh" (absorb "the" — Yahweh is a proper name, never takes an article)
+  [/\b[Tt]he LORD\b/g, 'Yahweh'],
+
+  // Holy Spirit / Ghost → Set-apart Spirit
   [/\bHoly Spirit\b/g, 'Set-apart Spirit'],
   [/\bHoly Ghost\b/g, 'Set-apart Spirit'],
   [/\bholy spirit\b/g, 'set-apart spirit'],
   [/\bholy ghost\b/g, 'set-apart spirit'],
   [/\bHoly One\b/g, 'Set-apart One'],
   [/\bholy one\b/g, 'set-apart one'],
+
+  // Yahshua / Messiah
   [/\bJesus Christ\b/g, 'Yahshua Messiah'],
   [/\bJESUS CHRIST\b/g, 'YAHSHUA MESSIAH'],
   [/\bChrist Jesus\b/g, 'Messiah Yahshua'],
@@ -26,54 +37,64 @@ const replacements: [RegExp, string][] = [
   [/\bChrist's\b/g, "Messiah's"],
   [/\bChrist\b/g, 'Messiah'],
   [/\bCHRIST\b/g, 'MESSIAH'],
-  // LORD (all caps = YHWH in KJV convention)
-  [/\bLORD'S\b/g, "Yahweh's"],
-  [/\bLORD's\b/g, "Yahweh's"],
+
+  // LORD (all caps = YHWH in KJV convention) — standalone
+  [/\bLORD'[Ss]\b/g, "Yahweh's"],
   [/\bLORD\b/g, 'Yahweh'],
-  // GOD (all caps = YHWH in some KJV passages)
+
+  // GOD (all caps in KJV = YHWH in certain passages, e.g. Psalm 68:20)
+  [/\bthe GOD\b/g, 'Elohim'],
   [/\bGOD\b/g, 'Elohim'],
-  // "the Lord" (not all caps) = Adonai
-  [/\bthe Lord\b/g, 'the Master'],
-  [/\bThe Lord\b/g, 'The Master'],
-  // Standalone "Lord" (context: usually Adonai or Kurios)
+
+  // "the Lord" (mixed case = Adonai) — absorb article since it reads better as just "Master"
+  // But keep "the" in contexts like "the Lord said" → "the Master said" to preserve grammar
+  [/\b[Tt]he Lord\b/g, 'the Master'],
+
+  // Standalone "Lord" → Master
+  [/\bLord's\b/g, "Master's"],
   [/\bLord\b/g, 'Master'],
+
   // "God" → Elohim
+  // "the God" → just "Elohim" (Hebrew doesn't use articles with Elohim the same way)
+  [/\bthe God of\b/g, 'Elohim of'],
+  [/\bThe God of\b/g, 'Elohim of'],
+  [/\bthe God\b/g, 'Elohim'],
   [/\bGod's\b/g, "Elohim's"],
   [/\bGod\b/g, 'Elohim'],
+
   // Church → assembly/congregation
   [/\bchurches\b/g, 'assemblies'],
   [/\bChurches\b/g, 'Assemblies'],
   [/\bchurch\b/g, 'assembly'],
   [/\bChurch\b/g, 'Assembly'],
-  // Cross → stake/execution stake (optional, common in HRM)
-  // [/\bcross\b/g, 'stake'],
-  // [/\bCross\b/g, 'Stake'],
-  // James → Ya'akov
-  [/\bJames\b/g, "Ya'aqob"],
-  // John → Yochanan (careful — only when it's the person, not the book reference)
-  // We skip this to avoid breaking book names
-  // Peter → Kepha
+
+  // Names
   [/\bSimon Peter\b/g, "Shim'on Kepha"],
   [/\bPeter\b/g, 'Kepha'],
-  // Paul → Sha'ul (he used both names)
+  [/\bJames\b/g, "Ya'aqob"],
   [/\bPaul\b/g, "Sha'ul"],
-  // Moses → Mosheh
   [/\bMoses\b/g, 'Mosheh'],
-  // Abraham stays Abraham (already Hebrew)
-  // Israel → Yisra'el
   [/\bIsrael\b/g, "Yisra'el"],
   [/\bISRAEL\b/g, "YISRA'EL"],
-  // Jerusalem → Yerushalayim
   [/\bJerusalem\b/g, 'Yerushalayim'],
-  // Sabbath → Shabbat
   [/\bsabbath\b/g, 'shabbat'],
   [/\bSabbath\b/g, 'Shabbat'],
-  // Satan stays Satan (already from Hebrew)
+];
+
+// Post-processing: clean up any artifacts like "the Yahweh" that slip through
+const postCleanup: [RegExp, string][] = [
+  [/\bthe Yahweh\b/g, 'Yahweh'],
+  [/\bThe Yahweh\b/g, 'Yahweh'],
+  [/\bthe the Master\b/gi, 'the Master'],
 ];
 
 export function restoreNames(text: string): string {
   let result = text;
   for (const [pattern, replacement] of replacements) {
+    result = result.replace(pattern, replacement);
+  }
+  // Safety pass — catch any "the Yahweh" that slipped through edge cases
+  for (const [pattern, replacement] of postCleanup) {
     result = result.replace(pattern, replacement);
   }
   return result;
