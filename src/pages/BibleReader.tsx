@@ -16,7 +16,7 @@ export default function BibleReader() {
   const [allHighlights, setAllHighlights] = useState<Highlight[]>(getHighlights());
   const [showBookList, setShowBookList] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [testament, setTestament] = useState<'OT' | 'NT'>('OT');
+  const [testament, setTestament] = useState<Testament>('OT');
 
   // Init from URL params
   useEffect(() => {
