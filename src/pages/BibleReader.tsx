@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { fetchChapter, bibleBooks, otBooks, ntBooks, apBooks, type BibleBook, type BiblePassage, type Testament } from '@/lib/bibleApi';
 import { restoreNames } from '@/lib/restoreNames';
 import { getHighlights, type Highlight } from '@/lib/highlights';
+import { preloadBookRefs } from '@/lib/crossReferences';
 import HighlightableVerse from '@/components/HighlightableVerse';
 import { BookOpen, ChevronLeft, ChevronRight, Search, Loader2 } from 'lucide-react';
 
