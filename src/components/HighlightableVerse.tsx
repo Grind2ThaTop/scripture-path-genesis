@@ -1,12 +1,15 @@
 import { useState } from 'react';
 import { addHighlight, removeHighlight, highlightColors, type HighlightColor, type Highlight } from '@/lib/highlights';
+import { type Testament } from '@/lib/bibleApi';
+import InterlinearText from '@/components/InterlinearText';
 import { Highlighter, Check, X } from 'lucide-react';
 
 interface HighlightableVerseProps {
   verseNumber: number;
   text: string;
-  reference: string; // e.g. "Genesis 1"
+  reference: string;
   source: 'bible' | 'lesson';
+  testament?: Testament;
   existingHighlight?: Highlight;
   onHighlightChange?: () => void;
 }
@@ -16,6 +19,7 @@ export default function HighlightableVerse({
   text,
   reference,
   source,
+  testament = 'OT',
   existingHighlight,
   onHighlightChange,
 }: HighlightableVerseProps) {
@@ -26,16 +30,8 @@ export default function HighlightableVerse({
   const colors = highlight ? highlightColors[highlight.color] : null;
 
   const handleHighlight = (color: HighlightColor) => {
-    // Remove existing first if re-highlighting
-    if (highlight) {
-      removeHighlight(highlight.id);
-    }
-    const newH = addHighlight({
-      reference: fullRef,
-      text,
-      color,
-      source,
-    });
+    if (highlight) removeHighlight(highlight.id);
+    const newH = addHighlight({ reference: fullRef, text, color, source });
     setHighlight(newH);
     setShowPicker(false);
     onHighlightChange?.();
@@ -52,23 +48,23 @@ export default function HighlightableVerse({
 
   return (
     <div className="relative group">
-      <p
-        onClick={() => setShowPicker(!showPicker)}
-        className={`leading-[1.9] text-[15px] md:text-base cursor-pointer rounded-sm px-1 -mx-1 transition-colors ${
+      <div
+        className={`leading-[1.9] text-[15px] md:text-base rounded-sm px-1 -mx-1 transition-colors ${
           colors
             ? `${colors.bg} ${colors.border} border`
-            : 'hover:bg-muted/40 border border-transparent'
+            : 'border border-transparent'
         }`}
       >
         <sup className="text-primary font-mono text-[10px] mr-1.5 select-none font-bold">{verseNumber}</sup>
-        <span className="text-foreground">{text}</span>
-        {!highlight && (
-          <Highlighter
-            size={12}
-            className="inline-block ml-1.5 text-muted-foreground opacity-0 group-hover:opacity-60 transition-opacity align-middle"
-          />
-        )}
-      </p>
+        <InterlinearText text={text} testament={testament} />
+        <button
+          onClick={(e) => { e.stopPropagation(); setShowPicker(!showPicker); }}
+          className="inline-block ml-1.5 text-muted-foreground opacity-0 group-hover:opacity-60 transition-opacity align-middle hover:text-primary"
+          title="Highlight verse"
+        >
+          <Highlighter size={12} />
+        </button>
+      </div>
 
       {/* Color picker popup */}
       {showPicker && (
