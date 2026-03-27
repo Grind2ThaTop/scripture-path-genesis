@@ -38,6 +38,7 @@ export default function BibleReader() {
     let cancelled = false;
     setLoading(true);
     setError(null);
+    preloadBookRefs(selectedBook.name);
     fetchChapter(selectedBook.name, chapter).then(data => {
       if (cancelled) return;
       if (data) {
