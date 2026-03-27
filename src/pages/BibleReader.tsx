@@ -221,7 +221,7 @@ export default function BibleReader() {
                 <span key={verse.verse} className="inline">
                   <sup className="text-primary font-mono text-[10px] mr-1 select-none">{verse.verse}</sup>
                   <span className="text-foreground leading-[1.9] text-[15px] md:text-base">
-                    {verse.text}
+                    {restoreNames(verse.text)}
                   </span>
                 </span>
               ))}

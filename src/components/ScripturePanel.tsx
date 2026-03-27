@@ -3,6 +3,7 @@ import { X, BookOpen, Languages, Loader2, ExternalLink } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { fetchPassage, bibleBooks, type BiblePassage } from '@/lib/bibleApi';
+import { restoreNames } from '@/lib/restoreNames';
 
 interface ScripturePanelProps {
   reference: string;
