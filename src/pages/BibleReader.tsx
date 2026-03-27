@@ -216,14 +216,12 @@ export default function BibleReader() {
           )}
 
           {!loading && !error && passage && (
-            <div className="space-y-0">
+            <div className="space-y-3">
               {passage.verses.map(verse => (
-                <span key={verse.verse} className="inline">
-                  <sup className="text-primary font-mono text-[10px] mr-1 select-none">{verse.verse}</sup>
-                  <span className="text-foreground leading-[1.9] text-[15px] md:text-base">
-                    {restoreNames(verse.text)}
-                  </span>
-                </span>
+                <p key={verse.verse} className="text-foreground leading-[1.9] text-[15px] md:text-base">
+                  <sup className="text-primary font-mono text-[10px] mr-1.5 select-none font-bold">{verse.verse}</sup>
+                  {restoreNames(verse.text)}
+                </p>
               ))}
             </div>
           )}
