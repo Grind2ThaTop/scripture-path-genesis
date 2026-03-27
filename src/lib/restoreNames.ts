@@ -28,8 +28,8 @@ const replacements: [RegExp, string][] = [
   [/\bholy one\b/g, 'set-apart one'],
 
   // Yahshua / Messiah (do these BEFORE "Lord" replacements)
-  [/\bLord Jesus Christ\b/g, 'Master Yahshua Messiah'],
-  [/\bLord Jesus\b/g, 'Master Yahshua'],
+  [/\bLord Jesus Christ\b/g, 'Yahshua Messiah'],
+  [/\bLord Jesus\b/g, 'Yahshua'],
   [/\bJesus Christ\b/g, 'Yahshua Messiah'],
   [/\bJESUS CHRIST\b/g, 'YAHSHUA MESSIAH'],
   [/\bChrist Jesus\b/g, 'Messiah Yahshua'],
