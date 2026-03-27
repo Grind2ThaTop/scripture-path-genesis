@@ -150,7 +150,7 @@ export default function ScripturePanel({ reference, isOpen, onClose }: Scripture
                       {passage.verses.map(v => (
                         <span key={v.verse} className="inline">
                           <sup className="text-primary font-mono text-[10px] mr-0.5 select-none">{v.verse}</sup>
-                          <span>{v.text}</span>
+                          <span>{restoreNames(v.text)}</span>
                         </span>
                       ))}
                     </div>
