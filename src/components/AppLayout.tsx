@@ -3,11 +3,12 @@ import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   BookOpen, GraduationCap, Languages, BarChart3,
-  ChevronLeft, ChevronRight, Menu, X, Home, Compass
+  ChevronLeft, ChevronRight, Menu, X, Home, Compass, Book
 } from 'lucide-react';
 
 const navItems = [
   { path: '/', label: 'Dashboard', icon: Home },
+  { path: '/bible', label: 'Bible (KJV)', icon: Book },
   { path: '/study-guide', label: 'Study Guide', icon: BookOpen },
   { path: '/hebrew', label: 'Hebrew', icon: Languages },
   { path: '/greek', label: 'Greek', icon: GraduationCap },
