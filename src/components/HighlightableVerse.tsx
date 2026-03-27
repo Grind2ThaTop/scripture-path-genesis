@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { addHighlight, removeHighlight, highlightColors, type HighlightColor, type Highlight } from '@/lib/highlights';
 import { type Testament } from '@/lib/bibleApi';
 import InterlinearText from '@/components/InterlinearText';
+import { CrossReferenceButton } from '@/components/CrossReferencePopup';
 import { Highlighter, Check, X } from 'lucide-react';
 
 interface HighlightableVerseProps {
@@ -57,6 +58,11 @@ export default function HighlightableVerse({
       >
         <sup className="text-primary font-mono text-[10px] mr-1.5 select-none font-bold">{verseNumber}</sup>
         <InterlinearText text={text} testament={testament} />
+        <CrossReferenceButton
+          bookName={reference.replace(/\s+\d+$/, '')}
+          chapter={parseInt(reference.match(/\d+$/)?.[0] || '1', 10)}
+          verse={verseNumber}
+        />
         <button
           onClick={(e) => { e.stopPropagation(); setShowPicker(!showPicker); }}
           className="inline-block ml-1.5 text-muted-foreground opacity-0 group-hover:opacity-60 transition-opacity align-middle hover:text-primary"
