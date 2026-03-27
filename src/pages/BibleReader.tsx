@@ -125,9 +125,13 @@ export default function BibleReader() {
         <span className={`text-xs px-2 py-1 rounded border ${
           selectedBook.testament === 'OT'
             ? 'bg-primary/10 text-primary border-primary/20'
-            : 'bg-accent/50 text-accent-foreground border-accent/30'
+            : selectedBook.testament === 'NT'
+            ? 'bg-accent/50 text-accent-foreground border-accent/30'
+            : 'bg-yellow-500/10 text-yellow-300 border-yellow-500/30'
         }`}>
-          {selectedBook.testament === 'OT' ? 'Old Testament · Hebrew' : 'New Testament · Greek'}
+          {selectedBook.testament === 'OT' ? 'Old Testament · Hebrew'
+            : selectedBook.testament === 'NT' ? 'New Testament · Greek'
+            : 'Apocrypha / Extra-Canon'}
         </span>
       </div>
 
