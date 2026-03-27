@@ -13,6 +13,7 @@ export default function BibleReader() {
   const [passage, setPassage] = useState<BiblePassage | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [allHighlights, setAllHighlights] = useState<Highlight[]>(getHighlights());
   const [showBookList, setShowBookList] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [testament, setTestament] = useState<'OT' | 'NT'>('OT');
