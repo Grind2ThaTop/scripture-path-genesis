@@ -36,10 +36,12 @@ export async function fetchChapter(book: string, chapter: number, translation: s
 }
 
 // Book data with testament info and chapter counts
+export type Testament = 'OT' | 'NT' | 'AP';
+
 export interface BibleBook {
   name: string;
   shortName: string;
-  testament: 'OT' | 'NT';
+  testament: Testament;
   chapters: number;
   hasHebrew: boolean;
   hasGreek: boolean;
