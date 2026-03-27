@@ -54,14 +54,32 @@ export default function HebrewLesson() {
           <h2 className="font-display text-xl font-semibold text-foreground">{section.title}</h2>
 
           {section.type === 'text' && (
-            <div className="bg-card border border-border rounded-lg p-5">
-              <p className="text-sm text-foreground/85 leading-relaxed whitespace-pre-line">{section.content}</p>
+            <div className="bg-card border border-border rounded-lg p-5 space-y-1">
+              {section.content.split('\n').filter(Boolean).map((line, li) => (
+                <HighlightableVerse
+                  key={li}
+                  verseNumber={li + 1}
+                  text={line}
+                  reference={`Hebrew: ${lesson.title} — ${section.title}`}
+                  source="lesson"
+                  existingHighlight={getHighlights().find(h => h.reference === `Hebrew: ${lesson.title} — ${section.title}:${li + 1}`)}
+                />
+              ))}
             </div>
           )}
 
           {section.type === 'practice' && (
-            <div className="bg-card border border-border rounded-lg p-5">
-              <p className="text-sm text-foreground/85 leading-relaxed whitespace-pre-line">{section.content}</p>
+            <div className="bg-card border border-border rounded-lg p-5 space-y-1">
+              {section.content.split('\n').filter(Boolean).map((line, li) => (
+                <HighlightableVerse
+                  key={li}
+                  verseNumber={li + 1}
+                  text={line}
+                  reference={`Hebrew: ${lesson.title} — ${section.title}`}
+                  source="lesson"
+                  existingHighlight={getHighlights().find(h => h.reference === `Hebrew: ${lesson.title} — ${section.title}:${li + 1}`)}
+                />
+              ))}
             </div>
           )}
 
