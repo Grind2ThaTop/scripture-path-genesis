@@ -3,6 +3,7 @@ import { X, BookOpen, Languages, Loader2, ExternalLink } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { fetchPassage, bibleBooks, type BiblePassage } from '@/lib/bibleApi';
+import { restoreNames } from '@/lib/restoreNames';
 
 interface ScripturePanelProps {
   reference: string;
@@ -149,7 +150,7 @@ export default function ScripturePanel({ reference, isOpen, onClose }: Scripture
                       {passage.verses.map(v => (
                         <span key={v.verse} className="inline">
                           <sup className="text-primary font-mono text-[10px] mr-0.5 select-none">{v.verse}</sup>
-                          <span>{v.text}</span>
+                          <span>{restoreNames(v.text)}</span>
                         </span>
                       ))}
                     </div>

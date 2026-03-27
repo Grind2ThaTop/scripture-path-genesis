@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { fetchChapter, bibleBooks, otBooks, ntBooks, type BibleBook, type BiblePassage } from '@/lib/bibleApi';
+import { restoreNames } from '@/lib/restoreNames';
 import { BookOpen, ChevronLeft, ChevronRight, Search, Loader2 } from 'lucide-react';
 
 export default function BibleReader() {
@@ -83,7 +84,7 @@ export default function BibleReader() {
           <BookOpen className="text-primary" size={28} />
           Scripture
         </h1>
-        <p className="text-muted-foreground text-sm mt-1">King James Version — Read, study, and train.</p>
+        <p className="text-muted-foreground text-sm mt-1">KJV · Restored Names Edition — Yahweh, Elohim, Yahshua</p>
       </div>
 
       {/* Book / Chapter selector */}
@@ -193,7 +194,7 @@ export default function BibleReader() {
           <h2 className="font-display text-lg font-bold text-foreground">
             {selectedBook.name} {chapter}
           </h2>
-          <span className="text-xs font-mono text-muted-foreground">KJV</span>
+          <span className="text-xs font-mono text-muted-foreground">KJV · Restored Names</span>
         </div>
 
         {/* Verses */}
@@ -220,7 +221,7 @@ export default function BibleReader() {
                 <span key={verse.verse} className="inline">
                   <sup className="text-primary font-mono text-[10px] mr-1 select-none">{verse.verse}</sup>
                   <span className="text-foreground leading-[1.9] text-[15px] md:text-base">
-                    {verse.text}
+                    {restoreNames(verse.text)}
                   </span>
                 </span>
               ))}
