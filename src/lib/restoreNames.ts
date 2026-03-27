@@ -1,21 +1,22 @@
 // Restores the sacred names in Bible text
 // Replaces traditional church renderings with original/restored names
+// RULE: When Scripture says "God" or "Lord" referring to the Most High, use His NAME — Yahweh.
 
 const replacements: [RegExp, string][] = [
   // ===== MULTI-WORD PATTERNS FIRST =====
 
-  // "the LORD God" → "Yahweh Elohim" (the is absorbed — Yahweh is a name, no article)
+  // "the LORD God" → "Yahweh Elohim"
   [/\b[Tt]he LORD God\b/g, 'Yahweh Elohim'],
   [/\bTHE LORD GOD\b/g, 'YAHWEH ELOHIM'],
 
-  // "the Lord GOD" → "Master Yahweh" (Adonai YHWH)
-  [/\b[Tt]he Lord GOD\b/g, 'Master Yahweh'],
+  // "the Lord GOD" → "Yahweh" (Adonai YHWH in Hebrew — both refer to the Most High)
+  [/\b[Tt]he Lord GOD\b/g, 'Yahweh Elohim'],
 
-  // "the LORD of hosts" → "Yahweh of hosts" (absorb article)
+  // "the LORD of hosts" → "Yahweh of hosts"
   [/\b[Tt]he LORD of hosts\b/g, 'Yahweh of hosts'],
   [/\bLORD of hosts\b/g, 'Yahweh of hosts'],
 
-  // "the LORD" alone → "Yahweh" (absorb "the" — Yahweh is a proper name, never takes an article)
+  // "the LORD" → "Yahweh"
   [/\b[Tt]he LORD\b/g, 'Yahweh'],
 
   // Holy Spirit / Ghost → Set-apart Spirit
@@ -26,7 +27,9 @@ const replacements: [RegExp, string][] = [
   [/\bHoly One\b/g, 'Set-apart One'],
   [/\bholy one\b/g, 'set-apart one'],
 
-  // Yahshua / Messiah
+  // Yahshua / Messiah (do these BEFORE "Lord" replacements)
+  [/\bLord Jesus Christ\b/g, 'Master Yahshua Messiah'],
+  [/\bLord Jesus\b/g, 'Master Yahshua'],
   [/\bJesus Christ\b/g, 'Yahshua Messiah'],
   [/\bJESUS CHRIST\b/g, 'YAHSHUA MESSIAH'],
   [/\bChrist Jesus\b/g, 'Messiah Yahshua'],
@@ -38,31 +41,54 @@ const replacements: [RegExp, string][] = [
   [/\bChrist\b/g, 'Messiah'],
   [/\bCHRIST\b/g, 'MESSIAH'],
 
-  // LORD (all caps = YHWH in KJV convention) — standalone
+  // LORD (all caps = YHWH in KJV) — standalone
   [/\bLORD'[Ss]\b/g, "Yahweh's"],
   [/\bLORD\b/g, 'Yahweh'],
 
-  // GOD (all caps in KJV = YHWH in certain passages, e.g. Psalm 68:20)
+  // GOD (all caps in KJV = YHWH in certain passages)
   [/\bthe GOD\b/g, 'Elohim'],
   [/\bGOD\b/g, 'Elohim'],
 
-  // "the Lord" (mixed case = Adonai) — absorb article since it reads better as just "Master"
-  // But keep "the" in contexts like "the Lord said" → "the Master said" to preserve grammar
-  [/\b[Tt]he Lord\b/g, 'the Master'],
+  // "the Lord" (mixed case) — In Scripture this almost always refers to Yahweh or Yahshua.
+  // OT: "the Lord" = Adonai, used for Yahweh → render as Yahweh
+  // NT: "the Lord" = Kurios, used for Yahshua → render as Master Yahshua or Yahweh depending on context
+  // Since we can't do semantic analysis, default to Yahweh (the Most High) — it's almost always Him.
+  [/\b[Tt]he Lord your God\b/g, 'Yahweh your Elohim'],
+  [/\b[Tt]he Lord our God\b/g, 'Yahweh our Elohim'],
+  [/\b[Tt]he Lord my God\b/g, 'Yahweh my Elohim'],
+  [/\b[Tt]he Lord his God\b/g, 'Yahweh his Elohim'],
+  [/\b[Tt]he Lord their God\b/g, 'Yahweh their Elohim'],
+  [/\b[Tt]he Lord thy God\b/g, 'Yahweh thy Elohim'],
+  [/\b[Tt]he Lord God\b/g, 'Yahweh Elohim'],
+  [/\b[Tt]he Lord of\b/g, 'Yahweh of'],
+  [/\b[Tt]he Lord hath\b/g, 'Yahweh hath'],
+  [/\b[Tt]he Lord shall\b/g, 'Yahweh shall'],
+  [/\b[Tt]he Lord will\b/g, 'Yahweh will'],
+  [/\b[Tt]he Lord is\b/g, 'Yahweh is'],
+  [/\b[Tt]he Lord said\b/g, 'Yahweh said'],
+  [/\b[Tt]he Lord spake\b/g, 'Yahweh spake'],
+  [/\b[Tt]he Lord came\b/g, 'Yahweh came'],
+  [/\b[Tt]he Lord made\b/g, 'Yahweh made'],
+  [/\b[Tt]he Lord gave\b/g, 'Yahweh gave'],
+  [/\b[Tt]he Lord brought\b/g, 'Yahweh brought'],
+  [/\b[Tt]he Lord sent\b/g, 'Yahweh sent'],
+  [/\b[Tt]he Lord was\b/g, 'Yahweh was'],
+  // Catch-all: remaining "the Lord" → Yahweh
+  [/\b[Tt]he Lord\b/g, 'Yahweh'],
 
-  // Standalone "Lord" → Master
-  [/\bLord's\b/g, "Master's"],
-  [/\bLord\b/g, 'Master'],
+  // Standalone "Lord" — context dependent:
+  // "Lord" at start of sentence or standalone in Scripture = usually the Most High
+  [/\bLord's\b/g, "Yahweh's"],
+  [/\bLord\b/g, 'Yahweh'],
 
-  // "God" → Elohim
-  // "the God" → just "Elohim" (Hebrew doesn't use articles with Elohim the same way)
+  // "God" → Elohim (His title, not a name — but correct)
   [/\bthe God of\b/g, 'Elohim of'],
   [/\bThe God of\b/g, 'Elohim of'],
   [/\bthe God\b/g, 'Elohim'],
   [/\bGod's\b/g, "Elohim's"],
   [/\bGod\b/g, 'Elohim'],
 
-  // Church → assembly/congregation
+  // Assembly
   [/\bchurches\b/g, 'assemblies'],
   [/\bChurches\b/g, 'Assemblies'],
   [/\bchurch\b/g, 'assembly'],
@@ -81,11 +107,12 @@ const replacements: [RegExp, string][] = [
   [/\bSabbath\b/g, 'Shabbat'],
 ];
 
-// Post-processing: clean up any artifacts like "the Yahweh" that slip through
+// Post-processing cleanup
 const postCleanup: [RegExp, string][] = [
   [/\bthe Yahweh\b/g, 'Yahweh'],
   [/\bThe Yahweh\b/g, 'Yahweh'],
-  [/\bthe the Master\b/gi, 'the Master'],
+  [/\bYahweh Yahweh\b/g, 'Yahweh'],
+  [/\bthe the\b/gi, 'the'],
 ];
 
 export function restoreNames(text: string): string {
@@ -93,7 +120,6 @@ export function restoreNames(text: string): string {
   for (const [pattern, replacement] of replacements) {
     result = result.replace(pattern, replacement);
   }
-  // Safety pass — catch any "the Yahweh" that slipped through edge cases
   for (const [pattern, replacement] of postCleanup) {
     result = result.replace(pattern, replacement);
   }
