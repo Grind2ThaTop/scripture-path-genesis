@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { getCrossReferences, hasCrossReferences, type CrossRef } from '@/lib/crossReferences';
-import { GitBranch, ExternalLink, X, ChevronRight } from 'lucide-react';
+import { getCrossReferencesAsync, type CrossRef } from '@/lib/crossReferences';
+import { GitBranch, ExternalLink, X, ChevronRight, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface CrossReferenceButtonProps {
@@ -12,16 +12,27 @@ interface CrossReferenceButtonProps {
 
 export function CrossReferenceButton({ bookName, chapter, verse }: CrossReferenceButtonProps) {
   const [open, setOpen] = useState(false);
-  const refs = getCrossReferences(bookName, chapter, verse);
+  const [refs, setRefs] = useState<CrossRef[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  if (refs.length === 0) return null;
+  const handleOpen = async () => {
+    if (open) {
+      setOpen(false);
+      return;
+    }
+    setOpen(true);
+    setLoading(true);
+    const data = await getCrossReferencesAsync(bookName, chapter, verse);
+    setRefs(data);
+    setLoading(false);
+  };
 
   return (
     <span className="relative inline-block align-middle ml-1">
       <button
-        onClick={(e) => { e.stopPropagation(); setOpen(!open); }}
+        onClick={(e) => { e.stopPropagation(); handleOpen(); }}
         className="text-primary/70 hover:text-primary transition-colors"
-        title={`${refs.length} cross-references`}
+        title="Cross-references"
       >
         <GitBranch size={12} />
       </button>
@@ -44,9 +55,11 @@ export function CrossReferenceButton({ bookName, chapter, verse }: CrossReferenc
                   <span className="text-xs font-bold text-foreground uppercase tracking-wider">
                     Cross References
                   </span>
-                  <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-mono font-bold">
-                    {refs.length}
-                  </span>
+                  {!loading && (
+                    <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-mono font-bold">
+                      {refs.length}
+                    </span>
+                  )}
                 </div>
                 <button
                   onClick={() => setOpen(false)}
@@ -56,9 +69,22 @@ export function CrossReferenceButton({ bookName, chapter, verse }: CrossReferenc
                 </button>
               </div>
 
-              {/* Cross-ref list */}
+              {/* Content */}
               <div className="p-2 space-y-1">
-                {refs.map((cr, i) => (
+                {loading && (
+                  <div className="flex items-center justify-center py-6 gap-2 text-muted-foreground">
+                    <Loader2 size={14} className="animate-spin" />
+                    <span className="text-xs">Loading references...</span>
+                  </div>
+                )}
+
+                {!loading && refs.length === 0 && (
+                  <div className="text-center py-6 text-xs text-muted-foreground">
+                    No cross-references found for this verse.
+                  </div>
+                )}
+
+                {!loading && refs.map((cr, i) => (
                   <CrossRefItem key={i} crossRef={cr} onClose={() => setOpen(false)} />
                 ))}
               </div>
@@ -71,8 +97,7 @@ export function CrossReferenceButton({ bookName, chapter, verse }: CrossReferenc
 }
 
 function CrossRefItem({ crossRef, onClose }: { crossRef: CrossRef; onClose: () => void }) {
-  // Parse reference to create link
-  const match = crossRef.ref.match(/^(.+?)\s+(\d+):(\d+)$/);
+  const match = crossRef.ref.match(/^(.+?)\s+(\d+):(\d+)/);
   const linkTo = match
     ? `/bible?book=${encodeURIComponent(match[1])}&chapter=${match[2]}`
     : '/bible';
@@ -89,12 +114,16 @@ function CrossRefItem({ crossRef, onClose }: { crossRef: CrossRef; onClose: () =
             <span className="text-xs font-bold text-primary font-mono">{crossRef.ref}</span>
             <ChevronRight size={10} className="text-muted-foreground opacity-0 group-hover/ref:opacity-100 transition-opacity" />
           </div>
-          <p className="text-xs text-muted-foreground leading-relaxed italic truncate">
-            "{crossRef.text}"
-          </p>
-          <p className="text-[10px] text-primary/70 mt-1 font-medium">
-            ↗ {crossRef.connection}
-          </p>
+          {crossRef.text && (
+            <p className="text-xs text-muted-foreground leading-relaxed italic truncate">
+              "{crossRef.text}"
+            </p>
+          )}
+          {crossRef.connection && (
+            <p className="text-[10px] text-primary/70 mt-1 font-medium">
+              ↗ {crossRef.connection}
+            </p>
+          )}
         </div>
         <ExternalLink size={10} className="text-muted-foreground mt-1 opacity-0 group-hover/ref:opacity-60 transition-opacity flex-shrink-0" />
       </div>
