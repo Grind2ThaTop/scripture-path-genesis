@@ -75,7 +75,8 @@ export default function BibleReader() {
     }
   };
 
-  const filteredBooks = (testament === 'OT' ? otBooks : ntBooks).filter(b =>
+  const booksByTestament = testament === 'OT' ? otBooks : testament === 'NT' ? ntBooks : apBooks;
+  const filteredBooks = booksByTestament.filter(b =>
     b.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
