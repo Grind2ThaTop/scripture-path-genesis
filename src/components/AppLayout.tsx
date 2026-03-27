@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   BookOpen, GraduationCap, Languages, BarChart3,
-  ChevronLeft, ChevronRight, Menu, X, Home
+  ChevronLeft, ChevronRight, Menu, X, Home, Compass
 } from 'lucide-react';
 
 const navItems = [
@@ -11,6 +11,7 @@ const navItems = [
   { path: '/study-guide', label: 'Study Guide', icon: BookOpen },
   { path: '/hebrew', label: 'Hebrew', icon: Languages },
   { path: '/greek', label: 'Greek', icon: GraduationCap },
+  { path: '/life-situations', label: 'Life Situations', icon: Compass },
   { path: '/progress', label: 'Progress', icon: BarChart3 },
 ];
 
@@ -97,7 +98,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         {/* Footer */}
         {!collapsed && (
           <div className="p-4 border-t border-border">
-            <p className="text-xs text-muted-foreground font-mono">v1.0 · Scripture First</p>
+            <p className="text-xs text-muted-foreground font-mono">v2.0 · Training System</p>
           </div>
         )}
       </aside>
