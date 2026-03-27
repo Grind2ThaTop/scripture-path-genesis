@@ -1,7 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { fetchChapter, bibleBooks, otBooks, ntBooks, type BibleBook, type BiblePassage } from '@/lib/bibleApi';
 import { restoreNames } from '@/lib/restoreNames';
+import { getHighlights, type Highlight } from '@/lib/highlights';
+import HighlightableVerse from '@/components/HighlightableVerse';
 import { BookOpen, ChevronLeft, ChevronRight, Search, Loader2 } from 'lucide-react';
 
 export default function BibleReader() {
@@ -11,6 +13,7 @@ export default function BibleReader() {
   const [passage, setPassage] = useState<BiblePassage | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [allHighlights, setAllHighlights] = useState<Highlight[]>(getHighlights());
   const [showBookList, setShowBookList] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [testament, setTestament] = useState<'OT' | 'NT'>('OT');
@@ -216,13 +219,22 @@ export default function BibleReader() {
           )}
 
           {!loading && !error && passage && (
-            <div className="space-y-3">
-              {passage.verses.map(verse => (
-                <p key={verse.verse} className="text-foreground leading-[1.9] text-[15px] md:text-base">
-                  <sup className="text-primary font-mono text-[10px] mr-1.5 select-none font-bold">{verse.verse}</sup>
-                  {restoreNames(verse.text)}
-                </p>
-              ))}
+            <div className="space-y-1">
+              {passage.verses.map(verse => {
+                const ref = `${selectedBook.name} ${chapter}`;
+                const existing = allHighlights.find(h => h.reference === `${ref}:${verse.verse}`);
+                return (
+                  <HighlightableVerse
+                    key={verse.verse}
+                    verseNumber={verse.verse}
+                    text={restoreNames(verse.text)}
+                    reference={ref}
+                    source="bible"
+                    existingHighlight={existing}
+                    onHighlightChange={() => setAllHighlights(getHighlights())}
+                  />
+                );
+              })}
             </div>
           )}
         </div>

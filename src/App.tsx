@@ -13,6 +13,7 @@ import GreekLessons from "./pages/GreekLessons";
 import GreekLesson from "./pages/GreekLesson";
 import LifeSituations from "./pages/LifeSituations";
 import BibleReader from "./pages/BibleReader";
+import Highlights from "./pages/Highlights";
 import Progress from "./pages/Progress";
 import NotFound from "./pages/NotFound";
 
@@ -34,6 +35,7 @@ const App = () => (
             <Route path="/greek" element={<GreekLessons />} />
             <Route path="/greek/:lessonId" element={<GreekLesson />} />
             <Route path="/bible" element={<BibleReader />} />
+            <Route path="/highlights" element={<Highlights />} />
             <Route path="/life-situations" element={<LifeSituations />} />
             <Route path="/progress" element={<Progress />} />
             <Route path="*" element={<NotFound />} />

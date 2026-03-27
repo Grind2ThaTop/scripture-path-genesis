@@ -1,7 +1,10 @@
+import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { greekLessons } from '@/data/greekData';
 import VocabularyCard from '@/components/VocabularyCard';
 import QuizSection from '@/components/QuizSection';
+import HighlightableVerse from '@/components/HighlightableVerse';
+import { getHighlights, type Highlight } from '@/lib/highlights';
 import { ArrowLeft, Check } from 'lucide-react';
 
 export default function GreekLesson() {
@@ -49,8 +52,17 @@ export default function GreekLesson() {
           <h2 className="font-display text-xl font-semibold text-foreground">{section.title}</h2>
 
           {(section.type === 'text' || section.type === 'practice') && (
-            <div className="bg-card border border-border rounded-lg p-5">
-              <p className="text-sm text-foreground/85 leading-relaxed whitespace-pre-line">{section.content}</p>
+            <div className="bg-card border border-border rounded-lg p-5 space-y-1">
+              {section.content.split('\n').filter(Boolean).map((line, li) => (
+                <HighlightableVerse
+                  key={li}
+                  verseNumber={li + 1}
+                  text={line}
+                  reference={`Greek: ${lesson.title} — ${section.title}`}
+                  source="lesson"
+                  existingHighlight={getHighlights().find(h => h.reference === `Greek: ${lesson.title} — ${section.title}:${li + 1}`)}
+                />
+              ))}
             </div>
           )}
 
