@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { fetchChapter, bibleBooks, otBooks, ntBooks, type BibleBook, type BiblePassage } from '@/lib/bibleApi';
+import { fetchChapter, bibleBooks, otBooks, ntBooks, apBooks, type BibleBook, type BiblePassage, type Testament } from '@/lib/bibleApi';
 import { restoreNames } from '@/lib/restoreNames';
 import { getHighlights, type Highlight } from '@/lib/highlights';
 import HighlightableVerse from '@/components/HighlightableVerse';
