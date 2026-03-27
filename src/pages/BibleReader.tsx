@@ -84,7 +84,7 @@ export default function BibleReader() {
           <BookOpen className="text-primary" size={28} />
           Scripture
         </h1>
-        <p className="text-muted-foreground text-sm mt-1">King James Version — Read, study, and train.</p>
+        <p className="text-muted-foreground text-sm mt-1">KJV · Restored Names Edition — Yahweh, Elohim, Yahshua</p>
       </div>
 
       {/* Book / Chapter selector */}
