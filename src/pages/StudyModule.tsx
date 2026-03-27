@@ -1,6 +1,7 @@
 import { useParams, Link } from 'react-router-dom';
 import { studyModules } from '@/data/studyGuideData';
-import { ArrowLeft, Check, Circle, BookOpen } from 'lucide-react';
+import { VerseRef } from '@/components/ScripturePanel';
+import { ArrowLeft, Check, Circle } from 'lucide-react';
 
 const difficultyColors = {
   milk: 'text-milk',
@@ -67,16 +68,14 @@ export default function StudyModule() {
                 </div>
               </div>
 
-              {/* Key Verses */}
+              {/* Key Verses — now clickable */}
               <div className="ml-10 mb-4">
                 <h4 className="text-xs uppercase tracking-wider text-muted-foreground mb-2 flex items-center gap-1.5">
-                  <BookOpen size={12} /> Key Verses
+                  📖 Key Verses
                 </h4>
                 <div className="flex flex-wrap gap-2">
                   {lesson.keyVerses.map(v => (
-                    <span key={v} className="text-xs bg-primary/10 text-primary px-2 py-1 rounded border border-primary/20">
-                      {v}
-                    </span>
+                    <VerseRef key={v} reference={v} />
                   ))}
                 </div>
               </div>
