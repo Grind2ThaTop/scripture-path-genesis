@@ -147,23 +147,22 @@ export default function BibleReader() {
           </div>
 
           {/* Testament tabs */}
-          <div className="flex gap-2">
-            <button
-              onClick={() => setTestament('OT')}
-              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                testament === 'OT' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              Old Testament ({otBooks.length})
-            </button>
-            <button
-              onClick={() => setTestament('NT')}
-              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                testament === 'NT' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              New Testament ({ntBooks.length})
-            </button>
+          <div className="flex flex-wrap gap-2">
+            {([
+              { key: 'OT' as Testament, label: 'Old Testament', count: otBooks.length },
+              { key: 'NT' as Testament, label: 'New Testament', count: ntBooks.length },
+              { key: 'AP' as Testament, label: 'Apocrypha & Extra-Canon', count: apBooks.length },
+            ]).map(tab => (
+              <button
+                key={tab.key}
+                onClick={() => setTestament(tab.key)}
+                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                  testament === tab.key ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                {tab.label} ({tab.count})
+              </button>
+            ))}
           </div>
 
           {/* Book grid */}
