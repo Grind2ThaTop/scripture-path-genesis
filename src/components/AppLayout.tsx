@@ -163,7 +163,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 <LogIn size={16} /> Sign In
               </Link>
             )}
-            <p className="text-xs text-muted-foreground font-mono">v3.0 · Scripture Intelligence</p>
+            <p className="text-xs text-muted-foreground font-mono">v3.0 · Derekh Emet</p>
           </div>
         )}
       </aside>
