@@ -200,18 +200,20 @@ async function renderVideoToBlob(
 
   onProgress(15, "Setting up video encoder...");
 
-  // Create audio element from mixed audio and add to stream
-  const audioElement = new Audio(URL.createObjectURL(wavBlob));
-  audioElement.volume = 1;
-  const audioStream = (audioElement as any).captureStream ? (audioElement as any).captureStream() : null;
+  // Use Web Audio API to play mixed audio into a MediaStream destination
+  const liveAudioCtx = new AudioContext({ sampleRate: 44100 });
+  const audioDestination = liveAudioCtx.createMediaStreamDestination();
+  
+  // Create a buffer source from our mixed audio and connect to destination
+  const liveSource = liveAudioCtx.createBufferSource();
+  liveSource.buffer = mixedBuffer;
+  liveSource.connect(audioDestination);
+  liveSource.connect(liveAudioCtx.destination); // Also play through speakers for preview
 
   const videoStream = canvas.captureStream(FPS);
 
   // Combine video + audio streams
-  const combinedTracks = [...videoStream.getTracks()];
-  if (audioStream) {
-    audioStream.getAudioTracks().forEach((t: MediaStreamTrack) => combinedTracks.push(t));
-  }
+  const combinedTracks = [...videoStream.getTracks(), ...audioDestination.stream.getAudioTracks()];
   const combinedStream = new MediaStream(combinedTracks);
 
   const mediaRecorder = new MediaRecorder(combinedStream, {
@@ -236,7 +238,7 @@ async function renderVideoToBlob(
   });
 
   mediaRecorder.start();
-  audioElement.play().catch(() => {});
+  liveSource.start(0);
 
   // Render each scene frame by frame
   const totalFrames = scenes.reduce((sum, s) => sum + Math.round((s.duration_ms / 1000) * FPS), 0);
