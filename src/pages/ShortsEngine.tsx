@@ -578,6 +578,8 @@ export default function ShortsEngine() {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       if (data?.audio_base64) {
+        // Store audio on scene for video rendering
+        updateScene(sceneIndex, { audio_base64: data.audio_base64 } as any);
         const audio = new Audio(`data:audio/mpeg;base64,${data.audio_base64}`);
         audio.onended = () => setPlayingAudio(null);
         await audio.play();
