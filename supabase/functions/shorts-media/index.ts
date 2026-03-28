@@ -96,7 +96,7 @@ serve(async (req) => {
         },
         body: JSON.stringify({
           model: ttsModel,
-          input: text,
+          text: text,
           voice: ttsVoice,
         }),
       });
