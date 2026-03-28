@@ -13,6 +13,7 @@ import { useIsAdmin } from '@/hooks/useIsAdmin';
 const navSections = [
   { label: 'Home', items: [
     { path: '/', label: 'Dashboard', icon: Home },
+    { path: '/search', label: 'Search', icon: Search },
     { path: '/community', label: 'Community', icon: Users },
     { path: '/calendar', label: 'Calendar', icon: CalendarDays },
     { path: '/church', label: 'Prayer', icon: HandHeart },
@@ -35,7 +36,6 @@ const navSections = [
     { path: '/progression', label: 'Your Level', icon: Crown },
     { path: '/highlights', label: 'Highlights', icon: Highlighter },
     { path: '/notes', label: 'Notes & Bookmarks', icon: StickyNote },
-    { path: '/search', label: 'Search', icon: Search },
     { path: '/progress', label: 'Progress', icon: BarChart3 },
   ]},
   { label: 'Admin', adminOnly: true, items: [
