@@ -41,6 +41,151 @@ export type Database = {
         }
         Relationships: []
       }
+      community_comments: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "community_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_posts: {
+        Row: {
+          channel: string
+          content: string
+          created_at: string
+          id: string
+          likes: number
+          pinned: boolean
+          post_type: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          channel?: string
+          content: string
+          created_at?: string
+          id?: string
+          likes?: number
+          pinned?: boolean
+          post_type?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          channel?: string
+          content?: string
+          created_at?: string
+          id?: string
+          likes?: number
+          pinned?: boolean
+          post_type?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      daily_content: {
+        Row: {
+          action_step: string
+          breakdown: string
+          created_at: string
+          date: string
+          deep_study: string | null
+          id: string
+          level_tag: string
+          reflection_question: string
+          verse_reference: string
+          verse_text: string
+        }
+        Insert: {
+          action_step: string
+          breakdown: string
+          created_at?: string
+          date: string
+          deep_study?: string | null
+          id?: string
+          level_tag?: string
+          reflection_question: string
+          verse_reference: string
+          verse_text: string
+        }
+        Update: {
+          action_step?: string
+          breakdown?: string
+          created_at?: string
+          date?: string
+          deep_study?: string | null
+          id?: string
+          level_tag?: string
+          reflection_question?: string
+          verse_reference?: string
+          verse_text?: string
+        }
+        Relationships: []
+      }
+      daily_reflections: {
+        Row: {
+          action_completed: boolean
+          created_at: string
+          daily_content_id: string
+          id: string
+          reflection_text: string
+          user_id: string
+        }
+        Insert: {
+          action_completed?: boolean
+          created_at?: string
+          daily_content_id: string
+          id?: string
+          reflection_text: string
+          user_id: string
+        }
+        Update: {
+          action_completed?: boolean
+          created_at?: string
+          daily_content_id?: string
+          id?: string
+          reflection_text?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_reflections_daily_content_id_fkey"
+            columns: ["daily_content_id"]
+            isOneToOne: false
+            referencedRelation: "daily_content"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       highlights: {
         Row: {
           color: string
@@ -70,6 +215,62 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      lesson_completions: {
+        Row: {
+          completed_at: string
+          id: string
+          lesson_id: string
+          module_id: string
+          reflection: string | null
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string
+          id?: string
+          lesson_id: string
+          module_id: string
+          reflection?: string | null
+          user_id: string
+        }
+        Update: {
+          completed_at?: string
+          id?: string
+          lesson_id?: string
+          module_id?: string
+          reflection?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      post_likes: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_likes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "community_posts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -179,6 +380,39 @@ export type Database = {
           tags?: string[] | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      user_levels: {
+        Row: {
+          current_level: number
+          days_consistent: number
+          id: string
+          lessons_completed: number
+          level_unlocked_at: string
+          updated_at: string
+          user_id: string
+          xp: number
+        }
+        Insert: {
+          current_level?: number
+          days_consistent?: number
+          id?: string
+          lessons_completed?: number
+          level_unlocked_at?: string
+          updated_at?: string
+          user_id: string
+          xp?: number
+        }
+        Update: {
+          current_level?: number
+          days_consistent?: number
+          id?: string
+          lessons_completed?: number
+          level_unlocked_at?: string
+          updated_at?: string
+          user_id?: string
+          xp?: number
         }
         Relationships: []
       }

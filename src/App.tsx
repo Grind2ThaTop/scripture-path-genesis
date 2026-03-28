@@ -22,6 +22,9 @@ import SearchPage from "./pages/SearchPage";
 import NotesPage from "./pages/NotesPage";
 import ReadingPlansPage from "./pages/ReadingPlansPage";
 import SharePage from "./pages/SharePage";
+import CommunityPage from "./pages/CommunityPage";
+import ProgressionPage from "./pages/ProgressionPage";
+import DailyDisciplinePage from "./pages/DailyDisciplinePage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -50,6 +53,9 @@ const App = () => (
               <Route path="/bible" element={<BibleReader />} />
               <Route path="/highlights" element={<Highlights />} />
               <Route path="/share" element={<SharePage />} />
+              <Route path="/community" element={<CommunityPage />} />
+              <Route path="/progression" element={<ProgressionPage />} />
+              <Route path="/daily" element={<DailyDisciplinePage />} />
               <Route path="/life-situations" element={<LifeSituations />} />
               <Route path="/progress" element={<Progress />} />
               <Route path="*" element={<NotFound />} />

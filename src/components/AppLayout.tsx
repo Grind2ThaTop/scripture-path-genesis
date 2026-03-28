@@ -5,13 +5,16 @@ import { useAuth } from '@/hooks/useAuth';
 import {
   BookOpen, GraduationCap, Languages, BarChart3,
   ChevronLeft, ChevronRight, Menu, X, Home, Compass, Book, Highlighter,
-  Search, StickyNote, Flame, LogIn, LogOut, User, Share2
+  Search, StickyNote, Flame, LogIn, LogOut, User, Share2, Users, Crown, Sword
 } from 'lucide-react';
 
 const navItems = [
   { path: '/', label: 'Dashboard', icon: Home },
+  { path: '/daily', label: 'Daily Discipline', icon: Sword },
   { path: '/bible', label: 'Bible (KJV)', icon: Book },
   { path: '/search', label: 'Search', icon: Search },
+  { path: '/community', label: 'The Narrow Path', icon: Users },
+  { path: '/progression', label: 'Your Level', icon: Crown },
   { path: '/highlights', label: 'Highlights', icon: Highlighter },
   { path: '/notes', label: 'Notes & Bookmarks', icon: StickyNote },
   { path: '/reading-plans', label: 'Reading Plans', icon: Flame },
