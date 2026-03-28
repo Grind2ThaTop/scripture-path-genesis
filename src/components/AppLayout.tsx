@@ -23,6 +23,7 @@ const navSections = [
   ]},
   { label: 'Study', items: [
     { path: '/bible', label: 'Bible (KJV)', icon: Book },
+    { path: '/discernment', label: 'Discernment', icon: Shield },
     { path: '/daily', label: 'Daily Discipline', icon: Sword },
     { path: '/hebrew', label: 'Hebrew', icon: Languages },
     { path: '/greek', label: 'Greek', icon: GraduationCap },
