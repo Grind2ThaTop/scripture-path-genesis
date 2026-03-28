@@ -288,6 +288,7 @@ async function renderVideoToBlob(
 
 export default function ShortsEngine() {
   const { user } = useAuth();
+  const { addTask, updateTask } = useBackgroundTasks();
   const [activeTab, setActiveTab] = useState("create");
   const [generating, setGenerating] = useState(false);
   const [project, setProject] = useState<ShortProject>({
