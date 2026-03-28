@@ -148,8 +148,8 @@ serve(async (req) => {
     }
 
     if (action === "generate_music") {
-      // Step 1: Submit music generation request
-      const musicModel = model || "minimax-music";
+      // Use elevenlabs/eleven_music via AIMLAPI - prompt only, no reference needed
+      const musicModel = model || "elevenlabs/eleven_music";
       const musicPrompt = prompt || "dark trap beat, 808 bass, hard hitting drums, cinematic, aggressive, hood energy";
       
       const submitResponse = await fetch("https://api.aimlapi.com/v2/generate/audio", {
@@ -161,7 +161,7 @@ serve(async (req) => {
         body: JSON.stringify({
           model: musicModel,
           prompt: musicPrompt,
-          duration_seconds: 30,
+          music_length_ms: 30000,
         }),
       });
 
