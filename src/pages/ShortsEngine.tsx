@@ -1395,23 +1395,61 @@ export default function ShortsEngine() {
                 </div>
               )}
 
-              <div className="flex gap-3">
-                <Button
-                  className="flex-1 h-14 text-lg font-bold bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
-                  onClick={renderAndDownload}
-                  disabled={rendering || project.scenes.length === 0}
-                >
-                  {rendering ? (
-                    <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> Rendering Video...</>
-                  ) : (
-                    <><Download className="w-5 h-5 mr-2" /> Render & Download Video</>
-                  )}
-                </Button>
-              </div>
+              {/* VIDEO PLAYER */}
+              {renderedVideoUrl && (
+                <div className="space-y-3">
+                  <div className="rounded-xl overflow-hidden border-2 border-primary/50 bg-black mx-auto" style={{ maxWidth: 360 }}>
+                    <video
+                      src={renderedVideoUrl}
+                      controls
+                      playsInline
+                      className="w-full"
+                      style={{ aspectRatio: "9/16" }}
+                    />
+                  </div>
+                  <div className="flex gap-3 justify-center">
+                    <Button
+                      className="h-12 px-6 text-base font-bold"
+                      onClick={downloadVideo}
+                    >
+                      <Download className="w-5 h-5 mr-2" /> Download Video
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="h-12 px-6"
+                      onClick={renderAndDownload}
+                      disabled={rendering}
+                    >
+                      <RefreshCw className="w-4 h-4 mr-2" /> Re-Render
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground text-center">
+                    WebM format (1080×1920) · Ready for YouTube Shorts upload
+                  </p>
+                </div>
+              )}
 
-              <p className="text-xs text-muted-foreground text-center">
-                Renders as WebM video with motion effects and burned-in captions. Ready for YouTube Shorts upload.
-              </p>
+              {!renderedVideoUrl && (
+                <div className="flex gap-3">
+                  <Button
+                    className="flex-1 h-14 text-lg font-bold bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
+                    onClick={renderAndDownload}
+                    disabled={rendering || project.scenes.length === 0}
+                  >
+                    {rendering ? (
+                      <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> Rendering Video...</>
+                    ) : (
+                      <><Film className="w-5 h-5 mr-2" /> Render Video</>
+                    )}
+                  </Button>
+                </div>
+              )}
+
+              {!renderedVideoUrl && (
+                <p className="text-xs text-muted-foreground text-center">
+                  Renders as WebM video with motion effects and burned-in captions. Ready for YouTube Shorts upload.
+                </p>
+              )}
             </CardContent>
           </Card>
 
