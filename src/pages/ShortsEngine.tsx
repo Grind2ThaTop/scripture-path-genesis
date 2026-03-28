@@ -358,7 +358,7 @@ export default function ShortsEngine() {
     setPlayingAudio(sceneIndex);
     try {
       const { data, error } = await supabase.functions.invoke("shorts-media", {
-        body: { action: "generate_tts", text: scene.narration_text, voice: "alloy" },
+        body: { action: "generate_tts", text: scene.narration_text, voice: project.voice_preset || "onyx" },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
