@@ -13,7 +13,7 @@ serve(async (req) => {
     const AIMLAPI_API_KEY = Deno.env.get("AIMLAPI_API_KEY");
     if (!AIMLAPI_API_KEY) throw new Error("AIMLAPI_API_KEY not configured");
 
-    const { action, prompt, scene_id, project_id, model, text, voice } = await req.json();
+    const { action, prompt, scene_id, project_id, model, text, voice, generation_id } = await req.json();
 
     if (action === "generate_image") {
       const imageModel = model || "flux/schnell";
