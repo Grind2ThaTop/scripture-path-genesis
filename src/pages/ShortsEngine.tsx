@@ -299,7 +299,7 @@ export default function ShortsEngine() {
     duration: 30,
     style: "urban-prophetic",
     tone: "urgent",
-    voice_preset: "truth-narrator",
+    voice_preset: "onyx",
     cta: "Follow for truth",
     status: "draft",
     scenes: [],
