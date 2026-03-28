@@ -72,6 +72,10 @@ const App = () => (
               <Route path="/leaderboard" element={<LeaderboardPage />} />
               <Route path="/church" element={<ChurchPage />} />
               <Route path="/admin" element={<AdminPage />} />
+              <Route path="/calendar" element={<CalendarPage />} />
+              <Route path="/onboarding" element={<OnboardingPage />} />
+              <Route path="/library" element={<LibraryPage />} />
+              <Route path="/members" element={<MembersPage />} />
               <Route path="/life-situations" element={<LifeSituations />} />
               <Route path="/progress" element={<Progress />} />
               <Route path="*" element={<NotFound />} />
