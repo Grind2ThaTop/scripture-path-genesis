@@ -52,6 +52,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
+          <BackgroundTasksProvider>
           <AppLayout>
             <Routes>
               <Route path="/" element={<Index />} />
