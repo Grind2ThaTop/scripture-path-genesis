@@ -214,7 +214,7 @@ serve(async (req) => {
         throw new Error(`Music generation failed: ${pollData.error?.message || "unknown"}`);
       }
 
-      return new Response(JSON.stringify({ success: true, status: pollData.status, generation_id: gid }), {
+      return new Response(JSON.stringify({ success: true, status: pollData.status, generation_id }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
