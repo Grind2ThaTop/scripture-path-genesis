@@ -1192,6 +1192,118 @@ export default function ShortsEngine() {
           </Card>
         </TabsContent>
 
+        {/* MUSIC TAB */}
+        <TabsContent value="music" className="space-y-4 mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Music className="w-5 h-5" /> Background Beat
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <label className="text-xs font-medium text-muted-foreground mb-2 block">Beat Style</label>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                  {BEAT_PRESETS.map(preset => (
+                    <button
+                      key={preset.id}
+                      onClick={() => {
+                        setMusicPreset(preset.id);
+                        if (preset.prompt) setMusicPrompt(preset.prompt);
+                      }}
+                      className={`p-3 rounded-lg border text-left transition-all text-sm ${
+                        musicPreset === preset.id 
+                          ? "border-primary bg-primary/10 ring-1 ring-primary" 
+                          : "border-border hover:border-primary/50"
+                      }`}
+                    >
+                      <span className="font-medium">{preset.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {musicPreset === "custom" && (
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">Custom Beat Description</label>
+                  <Textarea
+                    value={musicPrompt}
+                    onChange={e => setMusicPrompt(e.target.value)}
+                    rows={3}
+                    placeholder="Describe the beat you want... e.g. 'dark trap beat, heavy 808s, aggressive drums'"
+                  />
+                </div>
+              )}
+
+              <div className="p-3 rounded-lg bg-muted/30 border">
+                <p className="text-xs text-muted-foreground mb-1">Current prompt:</p>
+                <p className="text-sm">{musicPreset === "custom" ? musicPrompt : BEAT_PRESETS.find(b => b.id === musicPreset)?.prompt}</p>
+              </div>
+
+              <Button
+                className="w-full h-12 text-base font-bold"
+                onClick={generateMusic}
+                disabled={generatingMusic}
+              >
+                {generatingMusic ? (
+                  <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> Cooking Beat...</>
+                ) : (
+                  <><Music className="w-5 h-5 mr-2" /> Generate Beat 🔥</>
+                )}
+              </Button>
+
+              {musicUrl && (
+                <div className="p-4 rounded-lg border bg-muted/20 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-12 w-12 rounded-full"
+                        onClick={toggleMusicPlayback}
+                      >
+                        {musicPlaying ? (
+                          <Pause className="w-5 h-5" />
+                        ) : (
+                          <Play className="w-5 h-5" />
+                        )}
+                      </Button>
+                      <div>
+                        <p className="font-semibold text-sm">Beat Ready</p>
+                        <p className="text-xs text-muted-foreground">
+                          {BEAT_PRESETS.find(b => b.id === musicPreset)?.label || "Custom Beat"}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" onClick={generateMusic} disabled={generatingMusic}>
+                        <RefreshCw className="w-3.5 h-3.5 mr-1" /> Regenerate
+                      </Button>
+                      <Button variant="outline" size="sm" asChild>
+                        <a href={musicUrl} download="beat.mp3" target="_blank" rel="noopener noreferrer">
+                          <Download className="w-3.5 h-3.5 mr-1" /> Download
+                        </a>
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="p-2 rounded bg-green-500/10 border border-green-500/30 flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0" />
+                    <p className="text-xs">This beat will be included when you render the final video.</p>
+                  </div>
+                </div>
+              )}
+
+              {!musicUrl && !generatingMusic && (
+                <div className="p-4 rounded-lg border border-dashed text-center text-muted-foreground">
+                  <Music className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">No beat generated yet. Pick a style and hit generate.</p>
+                  <p className="text-xs mt-1">AI generates custom instrumentals — no weak generic music. Every beat hits hard. 🔥</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         {/* EXPORT TAB */}
         <TabsContent value="export" className="space-y-4 mt-4">
           {/* Render & Download */}
