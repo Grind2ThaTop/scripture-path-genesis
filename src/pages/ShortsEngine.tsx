@@ -832,6 +832,16 @@ export default function ShortsEngine() {
                 </div>
               </div>
 
+              {batchGenerating && (
+                <div className="p-3 rounded-lg bg-muted/50 border">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium">{batchProgress.message}</span>
+                    <span className="text-xs text-muted-foreground">{batchProgress.current}/{batchProgress.total}</span>
+                  </div>
+                  <Progress value={(batchProgress.current / batchProgress.total) * 100} className="h-2" />
+                </div>
+              )}
+
               <div className="space-y-3">
                 <AnimatePresence>
                   {project.scenes.map((scene, i) => (
