@@ -33,6 +33,10 @@ const navSections = [
     { path: '/leaderboard', label: 'Leaderboard', icon: Trophy },
     { path: '/library', label: 'Library', icon: Library },
   ]},
+  { label: 'Create', items: [
+    { path: '/shorts', label: 'Truth Shorts', icon: Video },
+    { path: '/share', label: 'Share Verse', icon: Share2 },
+  ]},
   { label: 'You', items: [
     { path: '/progression', label: 'Your Level', icon: Crown },
     { path: '/highlights', label: 'Highlights', icon: Highlighter },
