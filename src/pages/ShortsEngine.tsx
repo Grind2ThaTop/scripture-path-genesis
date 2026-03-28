@@ -653,12 +653,29 @@ export default function ShortsEngine() {
                               )}
 
                               <div className="flex gap-2">
-                                <Button variant="outline" size="sm" disabled>
-                                  <Image className="w-3.5 h-3.5 mr-1" /> Generate Image
-                                  <Badge variant="secondary" className="ml-2 text-[10px]">AIMLAPI</Badge>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => generateSceneImage(i)}
+                                  disabled={generatingImage === i}
+                                >
+                                  {generatingImage === i ? (
+                                    <><RefreshCw className="w-3.5 h-3.5 mr-1 animate-spin" /> Generating...</>
+                                  ) : (
+                                    <><Image className="w-3.5 h-3.5 mr-1" /> Generate Image</>
+                                  )}
                                 </Button>
-                                <Button variant="outline" size="sm" disabled>
-                                  <Play className="w-3.5 h-3.5 mr-1" /> Preview Voice
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => previewVoice(i)}
+                                  disabled={playingAudio === i}
+                                >
+                                  {playingAudio === i ? (
+                                    <><Volume2 className="w-3.5 h-3.5 mr-1 animate-pulse" /> Playing...</>
+                                  ) : (
+                                    <><Play className="w-3.5 h-3.5 mr-1" /> Preview Voice</>
+                                  )}
                                 </Button>
                               </div>
                             </CardContent>
