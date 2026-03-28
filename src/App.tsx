@@ -21,6 +21,7 @@ import ResetPassword from "./pages/ResetPassword";
 import SearchPage from "./pages/SearchPage";
 import NotesPage from "./pages/NotesPage";
 import ReadingPlansPage from "./pages/ReadingPlansPage";
+import SharePage from "./pages/SharePage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
