@@ -323,6 +323,7 @@ export default function ShortsEngine() {
   const [batchProgress, setBatchProgress] = useState({ current: 0, total: 0, message: "" });
   const [rendering, setRendering] = useState(false);
   const [renderProgress, setRenderProgress] = useState({ pct: 0, message: "" });
+  const [renderedVideoUrl, setRenderedVideoUrl] = useState<string | null>(null);
   const [previewPlaying, setPreviewPlaying] = useState(false);
   const [musicUrl, setMusicUrl] = useState<string | null>(null);
   const [generatingMusic, setGeneratingMusic] = useState(false);
@@ -654,26 +655,32 @@ export default function ShortsEngine() {
         updateTask(taskId, { progress: pct, message: msg });
       });
 
-      setRenderProgress({ pct: 100, message: "Download ready!" });
-      updateTask(taskId, { progress: 100, message: "Download ready!", status: "done" });
+      setRenderProgress({ pct: 100, message: "Video ready!" });
+      updateTask(taskId, { progress: 100, message: "Video ready! 🔥", status: "done" });
 
-      // Trigger download
+      // Store for in-app playback
+      if (renderedVideoUrl) URL.revokeObjectURL(renderedVideoUrl);
       const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${project.title || "truth-short"}.webm`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      setRenderedVideoUrl(url);
 
-      toast.success("Video downloaded!");
+      toast.success("Video rendered! Watch it below or download.");
     } catch (e: any) {
       toast.error(`Render failed: ${e.message}`);
       updateTask(taskId, { progress: 0, message: e.message, status: "error" });
     } finally {
       setRendering(false);
     }
+  };
+
+  const downloadVideo = () => {
+    if (!renderedVideoUrl) return;
+    const a = document.createElement("a");
+    a.href = renderedVideoUrl;
+    a.download = `${project.title || "truth-short"}.webm`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    toast.success("Video downloading!");
   };
 
   const totalDurationMs = project.scenes.reduce((sum, s) => sum + s.duration_ms, 0);
@@ -1388,23 +1395,61 @@ export default function ShortsEngine() {
                 </div>
               )}
 
-              <div className="flex gap-3">
-                <Button
-                  className="flex-1 h-14 text-lg font-bold bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
-                  onClick={renderAndDownload}
-                  disabled={rendering || project.scenes.length === 0}
-                >
-                  {rendering ? (
-                    <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> Rendering Video...</>
-                  ) : (
-                    <><Download className="w-5 h-5 mr-2" /> Render & Download Video</>
-                  )}
-                </Button>
-              </div>
+              {/* VIDEO PLAYER */}
+              {renderedVideoUrl && (
+                <div className="space-y-3">
+                  <div className="rounded-xl overflow-hidden border-2 border-primary/50 bg-black mx-auto" style={{ maxWidth: 360 }}>
+                    <video
+                      src={renderedVideoUrl}
+                      controls
+                      playsInline
+                      className="w-full"
+                      style={{ aspectRatio: "9/16" }}
+                    />
+                  </div>
+                  <div className="flex gap-3 justify-center">
+                    <Button
+                      className="h-12 px-6 text-base font-bold"
+                      onClick={downloadVideo}
+                    >
+                      <Download className="w-5 h-5 mr-2" /> Download Video
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="h-12 px-6"
+                      onClick={renderAndDownload}
+                      disabled={rendering}
+                    >
+                      <RefreshCw className="w-4 h-4 mr-2" /> Re-Render
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground text-center">
+                    WebM format (1080×1920) · Ready for YouTube Shorts upload
+                  </p>
+                </div>
+              )}
 
-              <p className="text-xs text-muted-foreground text-center">
-                Renders as WebM video with motion effects and burned-in captions. Ready for YouTube Shorts upload.
-              </p>
+              {!renderedVideoUrl && (
+                <div className="flex gap-3">
+                  <Button
+                    className="flex-1 h-14 text-lg font-bold bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
+                    onClick={renderAndDownload}
+                    disabled={rendering || project.scenes.length === 0}
+                  >
+                    {rendering ? (
+                      <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> Rendering Video...</>
+                    ) : (
+                      <><Film className="w-5 h-5 mr-2" /> Render Video</>
+                    )}
+                  </Button>
+                </div>
+              )}
+
+              {!renderedVideoUrl && (
+                <p className="text-xs text-muted-foreground text-center">
+                  Renders as WebM video with motion effects and burned-in captions. Ready for YouTube Shorts upload.
+                </p>
+              )}
             </CardContent>
           </Card>
 
