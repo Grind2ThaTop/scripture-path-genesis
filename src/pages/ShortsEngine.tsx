@@ -858,19 +858,47 @@ export default function ShortsEngine() {
 
     try {
       const blob = await renderVideoToBlob(project.scenes, (pct, msg) => {
-        setRenderProgress({ pct, message: msg });
-        updateTask(taskId, { progress: pct, message: msg });
+        const adjustedPct = Math.round(pct * 0.8); // 0-80% for rendering
+        setRenderProgress({ pct: adjustedPct, message: msg });
+        updateTask(taskId, { progress: adjustedPct, message: msg });
       }, musicUrl);
+
+      // Upload to storage
+      setRenderProgress({ pct: 85, message: "Uploading video..." });
+      updateTask(taskId, { progress: 85, message: "Uploading video..." });
+
+      const fileName = `${user!.id}/${project.id || Date.now()}_${Date.now()}.webm`;
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from("shorts-videos")
+        .upload(fileName, blob, { contentType: "video/webm", upsert: true });
+
+      let publicUrl: string | null = null;
+      if (uploadError) {
+        console.error("Upload error:", uploadError);
+        toast.error("Video rendered but upload failed. You can still download it.");
+      } else {
+        const { data: urlData } = supabase.storage.from("shorts-videos").getPublicUrl(fileName);
+        publicUrl = urlData?.publicUrl || null;
+
+        // Save URL to project
+        if (project.id && publicUrl) {
+          await supabase.from("shorts_projects")
+            .update({ final_video_url: publicUrl, status: "rendered" })
+            .eq("id", project.id);
+          setProject(p => ({ ...p, final_video_url: publicUrl, status: "rendered" }));
+        }
+      }
 
       setRenderProgress({ pct: 100, message: "Video ready!" });
       updateTask(taskId, { progress: 100, message: "Video ready! 🔥", status: "done" });
 
       // Store for in-app playback
       if (renderedVideoUrl) URL.revokeObjectURL(renderedVideoUrl);
-      const url = URL.createObjectURL(blob);
-      setRenderedVideoUrl(url);
+      const localUrl = URL.createObjectURL(blob);
+      setRenderedVideoUrl(publicUrl || localUrl);
 
-      toast.success("Video rendered! Watch it below or download.");
+      toast.success("Video rendered & saved! 🔥");
+      loadProjects();
     } catch (e: any) {
       toast.error(`Render failed: ${e.message}`);
       updateTask(taskId, { progress: 0, message: e.message, status: "error" });
