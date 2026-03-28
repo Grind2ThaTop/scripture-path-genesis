@@ -915,57 +915,62 @@ export default function ShortsEngine() {
 
   // Render and download video
   const renderAndDownload = async () => {
+    if (!user) return;
     if (project.scenes.length === 0) {
       toast.error("No scenes to render");
       return;
     }
+
     const taskId = `render-video-${Date.now()}`;
     setRendering(true);
     setRenderProgress({ pct: 0, message: "Preparing..." });
     addTask({ id: taskId, label: `Rendering "${project.title || "Truth Short"}"`, module: "Shorts", progress: 0, message: "Preparing...", status: "running" });
 
     try {
-      const blob = await renderVideoToBlob(project.scenes, (pct, msg) => {
-        const adjustedPct = Math.round(pct * 0.8); // 0-80% for rendering
+      const scenesWithAudio = await ensureSceneAudio(project.scenes, taskId);
+      const rendered = await renderVideoToBlob(scenesWithAudio, (pct, msg) => {
+        const adjustedPct = Math.max(20, Math.round(pct * 0.8));
         setRenderProgress({ pct: adjustedPct, message: msg });
         updateTask(taskId, { progress: adjustedPct, message: msg });
       }, musicUrl);
 
-      // Upload to storage
       setRenderProgress({ pct: 85, message: "Uploading video..." });
       updateTask(taskId, { progress: 85, message: "Uploading video..." });
 
-      const fileName = `${user!.id}/${project.id || Date.now()}_${Date.now()}.webm`;
-      const { data: uploadData, error: uploadError } = await supabase.storage
+      const fileName = `${user.id}/${project.id || Date.now()}_${Date.now()}.${rendered.extension}`;
+      const { error: uploadError } = await supabase.storage
         .from("shorts-videos")
-        .upload(fileName, blob, { contentType: "video/webm", upsert: true });
+        .upload(fileName, rendered.blob, { contentType: rendered.mimeType, upsert: true });
 
       let publicUrl: string | null = null;
       if (uploadError) {
         console.error("Upload error:", uploadError);
-        toast.error("Video rendered but upload failed. You can still download it.");
+        toast.error("Video rendered but upload failed. You can still save it below.");
       } else {
         const { data: urlData } = supabase.storage.from("shorts-videos").getPublicUrl(fileName);
         publicUrl = urlData?.publicUrl || null;
 
-        // Save URL to project
         if (project.id && publicUrl) {
           await supabase.from("shorts_projects")
             .update({ final_video_url: publicUrl, status: "rendered" })
             .eq("id", project.id);
-          setProject(p => ({ ...p, final_video_url: publicUrl, status: "rendered" }));
+          setProject((current) => ({ ...current, final_video_url: publicUrl, status: "rendered" }));
         }
       }
 
       setRenderProgress({ pct: 100, message: "Video ready!" });
       updateTask(taskId, { progress: 100, message: "Video ready! 🔥", status: "done" });
 
-      // Store for in-app playback
-      if (renderedVideoUrl) URL.revokeObjectURL(renderedVideoUrl);
-      const localUrl = URL.createObjectURL(blob);
-      setRenderedVideoUrl(publicUrl || localUrl);
+      if (renderedVideoUrl?.startsWith("blob:")) {
+        URL.revokeObjectURL(renderedVideoUrl);
+      }
+      const localUrl = URL.createObjectURL(rendered.blob);
+      renderedVideoBlobRef.current = rendered.blob;
+      renderedVideoExtRef.current = rendered.extension;
+      setRenderedVideoUrl(localUrl);
+      setActiveTab("export");
 
-      toast.success("Video rendered & saved! 🔥");
+      toast.success("Video rendered with audio. Save it below. 🔥");
       loadProjects();
     } catch (e: any) {
       toast.error(`Render failed: ${e.message}`);
@@ -978,32 +983,45 @@ export default function ShortsEngine() {
   const downloadVideo = async () => {
     if (!renderedVideoUrl) return;
     try {
-      const response = await fetch(renderedVideoUrl);
-      const blob = await response.blob();
-      const fileName = `${project.title || "truth-short"}_${Date.now()}.webm`;
+      const blob = renderedVideoBlobRef.current ?? await fetch(renderedVideoUrl).then((response) => {
+        if (!response.ok) throw new Error(`Failed to fetch video: ${response.status}`);
+        return response.blob();
+      });
 
-      // Use native share/save on mobile if available (saves to camera roll)
-      if (navigator.share && /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)) {
-        const file = new File([blob], fileName, { type: "video/webm" });
-        try {
+      const extension = renderedVideoExtRef.current || (renderedVideoUrl.toLowerCase().includes(".mp4") ? "mp4" : "webm");
+      const mimeType = blob.type || (extension === "mp4" ? "video/mp4" : "video/webm");
+      const safeTitle = (project.title || "truth-short").trim().replace(/[^a-z0-9]+/gi, "-").replace(/^-+|-+$/g, "").toLowerCase() || "truth-short";
+      const fileName = `${safeTitle}_${Date.now()}.${extension}`;
+      const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+
+      if (isMobile && navigator.share) {
+        const file = new File([blob], fileName, { type: mimeType });
+        const canShareFiles = typeof navigator.canShare !== "function" || navigator.canShare({ files: [file] });
+
+        if (canShareFiles) {
           await navigator.share({ files: [file], title: project.title || "Truth Short" });
-          toast.success("Video shared/saved! 🔥");
+          toast.success("Use your phone’s save/share sheet to keep the video.");
           return;
-        } catch (shareErr) {
-          // User cancelled or share failed, fall through to download
         }
       }
 
-      // Fallback: trigger download
       const url = URL.createObjectURL(blob);
+      if (isMobile) {
+        window.open(url, "_blank", "noopener,noreferrer");
+        toast.success("Opened the video. Use your browser’s share/save option to keep it.");
+        setTimeout(() => URL.revokeObjectURL(url), 30000);
+        return;
+      }
+
       const a = document.createElement("a");
       a.href = url;
       a.download = fileName;
+      a.rel = "noopener";
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      toast.success("Video downloading to your device! 📲");
+      setTimeout(() => URL.revokeObjectURL(url), 30000);
+      toast.success("Video download started. 📲");
     } catch (e: any) {
       toast.error("Download failed: " + (e.message || "Unknown error"));
     }
