@@ -146,12 +146,12 @@ export default function ScripturePanel({ reference, isOpen, onClose }: Scripture
                   {/* KJV Text */}
                   <div>
                     <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2 font-mono">KJV</p>
-                    <div className="text-foreground leading-relaxed font-display text-base">
+                    <div className="text-foreground leading-relaxed font-display text-base space-y-3">
                       {passage.verses.map(v => (
-                        <span key={v.verse} className="inline">
-                          <sup className="text-primary font-mono text-[10px] mr-0.5 select-none">{v.verse}</sup>
+                        <p key={v.verse}>
+                          <sup className="text-primary font-mono text-[10px] mr-1 select-none">{v.verse}</sup>
                           <span>{restoreNames(v.text)}</span>
-                        </span>
+                        </p>
                       ))}
                     </div>
                     <p className="text-xs text-muted-foreground mt-2">— {passage.reference}</p>
