@@ -639,7 +639,7 @@ export default function ShortsEngine() {
             <Card>
               <CardContent className="pt-4 space-y-2">
                 <label className="text-xs font-medium text-muted-foreground flex items-center gap-1">
-                  <Image className="w-3 h-3" /> Visual Style
+                  <ImageIcon className="w-3 h-3" /> Visual Style
                 </label>
                 <Select value={project.style} onValueChange={v => setProject(p => ({ ...p, style: v }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
@@ -874,7 +874,7 @@ export default function ShortsEngine() {
                                   {generatingImage === i ? (
                                     <><RefreshCw className="w-3.5 h-3.5 mr-1 animate-spin" /> Generating...</>
                                   ) : (
-                                    <><Image className="w-3.5 h-3.5 mr-1" /> Generate Image</>
+                                    <><ImageIcon className="w-3.5 h-3.5 mr-1" /> Generate Image</>
                                   )}
                                 </Button>
                                 <Button
