@@ -35,6 +35,7 @@ import CalendarPage from "./pages/CalendarPage";
 import OnboardingPage from "./pages/OnboardingPage";
 import LibraryPage from "./pages/LibraryPage";
 import MembersPage from "./pages/MembersPage";
+import DiscernmentPage from "./pages/DiscernmentPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -76,6 +77,7 @@ const App = () => (
               <Route path="/onboarding" element={<OnboardingPage />} />
               <Route path="/library" element={<LibraryPage />} />
               <Route path="/members" element={<MembersPage />} />
+              <Route path="/discernment" element={<DiscernmentPage />} />
               <Route path="/life-situations" element={<LifeSituations />} />
               <Route path="/progress" element={<Progress />} />
               <Route path="*" element={<NotFound />} />
