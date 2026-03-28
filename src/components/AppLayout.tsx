@@ -36,7 +36,6 @@ const navSections = [
     { path: '/progression', label: 'Your Level', icon: Crown },
     { path: '/highlights', label: 'Highlights', icon: Highlighter },
     { path: '/notes', label: 'Notes & Bookmarks', icon: StickyNote },
-    { path: '/search', label: 'Search', icon: Search },
     { path: '/progress', label: 'Progress', icon: BarChart3 },
   ]},
   { label: 'Admin', adminOnly: true, items: [
