@@ -543,13 +543,20 @@ export default function ShortsEngine() {
     if (data) setSavedProjects(data);
   };
 
+  const enforceBlackRepresentation = (prompt: string): string => {
+    const hasBlack = /black\s*(man|woman|men|women|people|family|person|couple|youth|teen|kid|child)/i.test(prompt);
+    if (hasBlack) return prompt;
+    return `${prompt}. IMPORTANT: All people in this image MUST be Black/African-American. Feature Black men, Black women, or Black families. Urban, modern, relatable setting. No generic stock photos.`;
+  };
+
   const generateSceneImage = async (sceneIndex: number) => {
     const scene = project.scenes[sceneIndex];
     if (!scene.image_prompt) { toast.error("Add an image prompt first"); return; }
     setGeneratingImage(sceneIndex);
     try {
+      const enhancedPrompt = enforceBlackRepresentation(scene.image_prompt);
       const { data, error } = await supabase.functions.invoke("shorts-media", {
-        body: { action: "generate_image", prompt: scene.image_prompt },
+        body: { action: "generate_image", prompt: enhancedPrompt },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
@@ -820,8 +827,9 @@ export default function ShortsEngine() {
       setBatchProgress({ current: i + 1, total: project.scenes.length, message: `Generating scene ${i + 1}...` });
       updateTask(taskId, { progress: pct, message: `Generating scene ${i + 1}/${project.scenes.length}...` });
       try {
+        const enhancedPrompt = enforceBlackRepresentation(scene.image_prompt);
         const { data, error } = await supabase.functions.invoke("shorts-media", {
-          body: { action: "generate_image", prompt: scene.image_prompt },
+          body: { action: "generate_image", prompt: enhancedPrompt },
         });
         if (error) throw error;
         if (data?.image_url) {
@@ -871,15 +879,38 @@ export default function ShortsEngine() {
     }
   };
 
-  const downloadVideo = () => {
+  const downloadVideo = async () => {
     if (!renderedVideoUrl) return;
-    const a = document.createElement("a");
-    a.href = renderedVideoUrl;
-    a.download = `${project.title || "truth-short"}.webm`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    toast.success("Video downloading!");
+    try {
+      const response = await fetch(renderedVideoUrl);
+      const blob = await response.blob();
+      const fileName = `${project.title || "truth-short"}_${Date.now()}.webm`;
+
+      // Use native share/save on mobile if available (saves to camera roll)
+      if (navigator.share && /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)) {
+        const file = new File([blob], fileName, { type: "video/webm" });
+        try {
+          await navigator.share({ files: [file], title: project.title || "Truth Short" });
+          toast.success("Video shared/saved! 🔥");
+          return;
+        } catch (shareErr) {
+          // User cancelled or share failed, fall through to download
+        }
+      }
+
+      // Fallback: trigger download
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success("Video downloading to your device! 📲");
+    } catch (e: any) {
+      toast.error("Download failed: " + (e.message || "Unknown error"));
+    }
   };
 
   const totalDurationMs = project.scenes.reduce((sum, s) => sum + s.duration_ms, 0);
