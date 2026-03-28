@@ -28,6 +28,9 @@ import DailyDisciplinePage from "./pages/DailyDisciplinePage";
 import ProphecyHub from "./pages/ProphecyHub";
 import ViralHub from "./pages/ViralHub";
 import TopicEngine from "./pages/TopicEngine";
+import LeaderboardPage from "./pages/LeaderboardPage";
+import ChurchPage from "./pages/ChurchPage";
+import AdminPage from "./pages/AdminPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -62,6 +65,9 @@ const App = () => (
               <Route path="/prophecy" element={<ProphecyHub />} />
               <Route path="/viral" element={<ViralHub />} />
               <Route path="/topics" element={<TopicEngine />} />
+              <Route path="/leaderboard" element={<LeaderboardPage />} />
+              <Route path="/church" element={<ChurchPage />} />
+              <Route path="/admin" element={<AdminPage />} />
               <Route path="/life-situations" element={<LifeSituations />} />
               <Route path="/progress" element={<Progress />} />
               <Route path="*" element={<NotFound />} />
