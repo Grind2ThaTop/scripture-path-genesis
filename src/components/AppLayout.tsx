@@ -7,7 +7,7 @@ import {
   BookOpen, GraduationCap, Languages, BarChart3,
   ChevronLeft, ChevronRight, Menu, X, Home, Compass, Book, Highlighter,
   Search, StickyNote, Flame, LogIn, LogOut, User, Share2, Users, Crown, Sword, Eye, Zap, Target,
-  Trophy, HandHeart, Shield, CalendarDays, Library, CircleDot
+  Trophy, HandHeart, Shield, CalendarDays, Library, CircleDot, Video
 } from 'lucide-react';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 
@@ -32,6 +32,10 @@ const navSections = [
     { path: '/members', label: 'Members', icon: CircleDot },
     { path: '/leaderboard', label: 'Leaderboard', icon: Trophy },
     { path: '/library', label: 'Library', icon: Library },
+  ]},
+  { label: 'Create', items: [
+    { path: '/shorts', label: 'Truth Shorts', icon: Video },
+    { path: '/share', label: 'Share Verse', icon: Share2 },
   ]},
   { label: 'You', items: [
     { path: '/progression', label: 'Your Level', icon: Crown },

@@ -37,6 +37,7 @@ import LibraryPage from "./pages/LibraryPage";
 import MembersPage from "./pages/MembersPage";
 import DiscernmentPage from "./pages/DiscernmentPage";
 import YahwehIsOnePage from "./pages/YahwehIsOnePage";
+import ShortsEngine from "./pages/ShortsEngine";
 import AdminRoute from "./components/AdminRoute";
 import NotFound from "./pages/NotFound";
 
@@ -81,6 +82,7 @@ const App = () => (
               <Route path="/members" element={<MembersPage />} />
               <Route path="/discernment" element={<DiscernmentPage />} />
               <Route path="/yahweh-is-one" element={<YahwehIsOnePage />} />
+              <Route path="/shorts" element={<ShortsEngine />} />
               <Route path="/life-situations" element={<LifeSituations />} />
               <Route path="/progress" element={<Progress />} />
               <Route path="*" element={<NotFound />} />
