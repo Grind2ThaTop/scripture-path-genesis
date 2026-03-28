@@ -318,6 +318,98 @@ export type Database = {
         }
         Relationships: []
       }
+      event_attendance: {
+        Row: {
+          attended: boolean
+          event_id: string
+          id: string
+          joined_at: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          attended?: boolean
+          event_id: string
+          id?: string
+          joined_at?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          attended?: boolean
+          event_id?: string
+          id?: string
+          joined_at?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_attendance_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      events: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          end_time: string | null
+          event_type: string
+          id: string
+          is_recurring: boolean
+          notes: string | null
+          recurrence_rule: string | null
+          related_lesson_id: string | null
+          replay_url: string | null
+          scriptures_covered: string[] | null
+          speaker: string | null
+          start_time: string
+          timezone: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          end_time?: string | null
+          event_type?: string
+          id?: string
+          is_recurring?: boolean
+          notes?: string | null
+          recurrence_rule?: string | null
+          related_lesson_id?: string | null
+          replay_url?: string | null
+          scriptures_covered?: string[] | null
+          speaker?: string | null
+          start_time: string
+          timezone?: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          end_time?: string | null
+          event_type?: string
+          id?: string
+          is_recurring?: boolean
+          notes?: string | null
+          recurrence_rule?: string | null
+          related_lesson_id?: string | null
+          replay_url?: string | null
+          scriptures_covered?: string[] | null
+          speaker?: string | null
+          start_time?: string
+          timezone?: string
+          title?: string
+        }
+        Relationships: []
+      }
       group_members: {
         Row: {
           group_id: string
@@ -401,6 +493,96 @@ export type Database = {
           module_id?: string
           reflection?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      library_resources: {
+        Row: {
+          content: string | null
+          created_at: string
+          description: string | null
+          difficulty: string | null
+          downloads: number
+          file_url: string | null
+          id: string
+          media_type: string | null
+          resource_type: string
+          tags: string[] | null
+          teacher: string | null
+          testament: string | null
+          title: string
+          topic: string | null
+          track: string | null
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          description?: string | null
+          difficulty?: string | null
+          downloads?: number
+          file_url?: string | null
+          id?: string
+          media_type?: string | null
+          resource_type?: string
+          tags?: string[] | null
+          teacher?: string | null
+          testament?: string | null
+          title: string
+          topic?: string | null
+          track?: string | null
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          description?: string | null
+          difficulty?: string | null
+          downloads?: number
+          file_url?: string | null
+          id?: string
+          media_type?: string | null
+          resource_type?: string
+          tags?: string[] | null
+          teacher?: string | null
+          testament?: string | null
+          title?: string
+          topic?: string | null
+          track?: string | null
+        }
+        Relationships: []
+      }
+      onboarding_responses: {
+        Row: {
+          assigned_track: string | null
+          completed_at: string
+          experience_level: string | null
+          growth_areas: string[] | null
+          id: string
+          user_id: string
+          wants_accountability: boolean | null
+          wants_circle: boolean | null
+          why_joining: string | null
+        }
+        Insert: {
+          assigned_track?: string | null
+          completed_at?: string
+          experience_level?: string | null
+          growth_areas?: string[] | null
+          id?: string
+          user_id: string
+          wants_accountability?: boolean | null
+          wants_circle?: boolean | null
+          why_joining?: string | null
+        }
+        Update: {
+          assigned_track?: string | null
+          completed_at?: string
+          experience_level?: string | null
+          growth_areas?: string[] | null
+          id?: string
+          user_id?: string
+          wants_accountability?: boolean | null
+          wants_circle?: boolean | null
+          why_joining?: string | null
         }
         Relationships: []
       }
