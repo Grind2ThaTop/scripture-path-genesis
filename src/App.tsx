@@ -25,6 +25,7 @@ import SharePage from "./pages/SharePage";
 import CommunityPage from "./pages/CommunityPage";
 import ProgressionPage from "./pages/ProgressionPage";
 import DailyDisciplinePage from "./pages/DailyDisciplinePage";
+import ProphecyHub from "./pages/ProphecyHub";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -56,6 +57,7 @@ const App = () => (
               <Route path="/community" element={<CommunityPage />} />
               <Route path="/progression" element={<ProgressionPage />} />
               <Route path="/daily" element={<DailyDisciplinePage />} />
+              <Route path="/prophecy" element={<ProphecyHub />} />
               <Route path="/life-situations" element={<LifeSituations />} />
               <Route path="/progress" element={<Progress />} />
               <Route path="*" element={<NotFound />} />
