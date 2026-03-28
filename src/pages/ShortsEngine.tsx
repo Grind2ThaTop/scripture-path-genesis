@@ -50,6 +50,17 @@ const TONE_PRESETS = ["urgent", "bold", "sobering", "confrontational", "teaching
 const DURATION_OPTIONS = [15, 30, 40, 45];
 const MOTION_TYPES = ["ken-burns", "zoom-in", "zoom-out", "pan-left", "pan-right", "parallax", "static"];
 
+const BEAT_PRESETS = [
+  { id: "hood-trap", label: "🔥 Hood Trap", prompt: "dark trap beat, heavy 808 bass, hi-hats, aggressive snare, cinematic tension, hood energy, no vocals, instrumental only" },
+  { id: "drill", label: "⚡ Drill", prompt: "UK drill beat, sliding 808s, dark piano melody, aggressive percussion, menacing energy, no vocals, instrumental only" },
+  { id: "boom-bap", label: "💥 Boom Bap", prompt: "boom bap hip hop beat, hard drums, chopped soul sample, gritty underground, no vocals, instrumental only" },
+  { id: "cinematic-hard", label: "🎬 Cinematic Hard", prompt: "epic cinematic trap beat, orchestral strings, heavy 808 bass, war drums, intense dark atmosphere, no vocals" },
+  { id: "dark-ambient", label: "🌑 Dark Ambient", prompt: "dark ambient atmospheric beat, deep bass, eerie pads, minimal percussion, suspenseful mood, no vocals" },
+  { id: "prophetic-fire", label: "🔥 Prophetic Fire", prompt: "aggressive spiritual warfare beat, tribal drums, distorted 808s, intense chanting atmosphere, battle energy, no vocals" },
+  { id: "street-gospel", label: "⛪ Street Gospel", prompt: "hard gospel trap beat, choir samples, heavy 808 bass, church organ, aggressive drums, street energy, no vocals" },
+  { id: "custom", label: "🎤 Custom Beat", prompt: "" },
+];
+
 interface Scene {
   id?: string;
   scene_order: number;
