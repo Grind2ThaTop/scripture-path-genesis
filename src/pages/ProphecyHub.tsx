@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -25,6 +26,7 @@ const CATEGORY_META: Record<string, { label: string; icon: any; color: string }>
 
 export default function ProphecyHub() {
   const { user } = useAuth();
+  const { isAdmin } = useIsAdmin();
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
 
@@ -91,17 +93,19 @@ export default function ProphecyHub() {
             Current events mapped to biblical prophecy — no speculation, just scripture.
           </p>
         </div>
-        <Button
-          onClick={runEngine}
-          disabled={generating}
-          className="bg-primary text-primary-foreground hover:bg-primary/90"
-        >
-          {generating ? (
-            <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Scanning News...</>
-          ) : (
-            <><RefreshCw className="mr-2 h-4 w-4" /> Run Prophecy Engine</>
-          )}
-        </Button>
+        {isAdmin && (
+          <Button
+            onClick={runEngine}
+            disabled={generating}
+            className="bg-primary text-primary-foreground hover:bg-primary/90"
+          >
+            {generating ? (
+              <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Scanning News...</>
+            ) : (
+              <><RefreshCw className="mr-2 h-4 w-4" /> Run Prophecy Engine</>
+            )}
+          </Button>
+        )}
       </div>
 
       {/* Category filters */}
