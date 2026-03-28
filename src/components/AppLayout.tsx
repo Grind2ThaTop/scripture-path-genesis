@@ -13,6 +13,7 @@ const navItems = [
   { path: '/daily', label: 'Daily Discipline', icon: Sword },
   { path: '/bible', label: 'Bible (KJV)', icon: Book },
   { path: '/search', label: 'Search', icon: Search },
+  { path: '/prophecy', label: 'Truth Cuts Deep', icon: Eye },
   { path: '/community', label: 'The Narrow Path', icon: Users },
   { path: '/progression', label: 'Your Level', icon: Crown },
   { path: '/highlights', label: 'Highlights', icon: Highlighter },
