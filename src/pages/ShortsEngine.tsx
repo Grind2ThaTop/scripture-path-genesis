@@ -114,6 +114,51 @@ export default function ShortsEngine() {
     if (data) setSavedProjects(data);
   };
 
+  const generateSceneImage = async (sceneIndex: number) => {
+    const scene = project.scenes[sceneIndex];
+    if (!scene.image_prompt) { toast.error("Add an image prompt first"); return; }
+    setGeneratingImage(sceneIndex);
+    try {
+      const { data, error } = await supabase.functions.invoke("shorts-media", {
+        body: { action: "generate_image", prompt: scene.image_prompt },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      if (data?.image_url) {
+        updateScene(sceneIndex, { generated_image_url: data.image_url });
+        toast.success(`Scene ${sceneIndex + 1} image generated!`);
+      } else {
+        toast.info("Image generated but URL format may differ. Check console.");
+        console.log("AIMLAPI response:", data);
+      }
+    } catch (e: any) {
+      toast.error(e.message || "Failed to generate image");
+    } finally {
+      setGeneratingImage(null);
+    }
+  };
+
+  const previewVoice = async (sceneIndex: number) => {
+    const scene = project.scenes[sceneIndex];
+    if (!scene.narration_text) { toast.error("Add narration text first"); return; }
+    setPlayingAudio(sceneIndex);
+    try {
+      const { data, error } = await supabase.functions.invoke("shorts-media", {
+        body: { action: "generate_tts", text: scene.narration_text, voice: "alloy" },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      if (data?.audio_base64) {
+        const audio = new Audio(`data:audio/mpeg;base64,${data.audio_base64}`);
+        audio.onended = () => setPlayingAudio(null);
+        await audio.play();
+      }
+    } catch (e: any) {
+      toast.error(e.message || "Failed to generate voice");
+      setPlayingAudio(null);
+    }
+  };
+
   const selectTopic = (preset: typeof TOPIC_PRESETS[0]) => {
     setProject(p => ({
       ...p,
