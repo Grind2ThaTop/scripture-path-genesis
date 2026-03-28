@@ -878,15 +878,38 @@ export default function ShortsEngine() {
     }
   };
 
-  const downloadVideo = () => {
+  const downloadVideo = async () => {
     if (!renderedVideoUrl) return;
-    const a = document.createElement("a");
-    a.href = renderedVideoUrl;
-    a.download = `${project.title || "truth-short"}.webm`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    toast.success("Video downloading!");
+    try {
+      const response = await fetch(renderedVideoUrl);
+      const blob = await response.blob();
+      const fileName = `${project.title || "truth-short"}_${Date.now()}.webm`;
+
+      // Use native share/save on mobile if available (saves to camera roll)
+      if (navigator.share && /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)) {
+        const file = new File([blob], fileName, { type: "video/webm" });
+        try {
+          await navigator.share({ files: [file], title: project.title || "Truth Short" });
+          toast.success("Video shared/saved! 🔥");
+          return;
+        } catch (shareErr) {
+          // User cancelled or share failed, fall through to download
+        }
+      }
+
+      // Fallback: trigger download
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success("Video downloading to your device! 📲");
+    } catch (e: any) {
+      toast.error("Download failed: " + (e.message || "Unknown error"));
+    }
   };
 
   const totalDurationMs = project.scenes.reduce((sum, s) => sum + s.duration_ms, 0);
