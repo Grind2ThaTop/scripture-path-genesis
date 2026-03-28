@@ -3,6 +3,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { AuthProvider } from "@/hooks/useAuth";
 import AppLayout from "@/components/AppLayout";
 import Index from "./pages/Index";
 import StudyGuide from "./pages/StudyGuide";
@@ -15,6 +16,11 @@ import LifeSituations from "./pages/LifeSituations";
 import BibleReader from "./pages/BibleReader";
 import Highlights from "./pages/Highlights";
 import Progress from "./pages/Progress";
+import AuthPage from "./pages/AuthPage";
+import ResetPassword from "./pages/ResetPassword";
+import SearchPage from "./pages/SearchPage";
+import NotesPage from "./pages/NotesPage";
+import ReadingPlansPage from "./pages/ReadingPlansPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -25,22 +31,29 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <AppLayout>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/study-guide" element={<StudyGuide />} />
-            <Route path="/study-guide/:moduleId" element={<StudyModule />} />
-            <Route path="/hebrew" element={<HebrewLessons />} />
-            <Route path="/hebrew/:lessonId" element={<HebrewLesson />} />
-            <Route path="/greek" element={<GreekLessons />} />
-            <Route path="/greek/:lessonId" element={<GreekLesson />} />
-            <Route path="/bible" element={<BibleReader />} />
-            <Route path="/highlights" element={<Highlights />} />
-            <Route path="/life-situations" element={<LifeSituations />} />
-            <Route path="/progress" element={<Progress />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </AppLayout>
+        <AuthProvider>
+          <AppLayout>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/auth" element={<AuthPage />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/search" element={<SearchPage />} />
+              <Route path="/notes" element={<NotesPage />} />
+              <Route path="/reading-plans" element={<ReadingPlansPage />} />
+              <Route path="/study-guide" element={<StudyGuide />} />
+              <Route path="/study-guide/:moduleId" element={<StudyModule />} />
+              <Route path="/hebrew" element={<HebrewLessons />} />
+              <Route path="/hebrew/:lessonId" element={<HebrewLesson />} />
+              <Route path="/greek" element={<GreekLessons />} />
+              <Route path="/greek/:lessonId" element={<GreekLesson />} />
+              <Route path="/bible" element={<BibleReader />} />
+              <Route path="/highlights" element={<Highlights />} />
+              <Route path="/life-situations" element={<LifeSituations />} />
+              <Route path="/progress" element={<Progress />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </AppLayout>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

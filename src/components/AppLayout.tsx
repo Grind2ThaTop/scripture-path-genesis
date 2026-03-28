@@ -1,15 +1,20 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '@/hooks/useAuth';
 import {
   BookOpen, GraduationCap, Languages, BarChart3,
-  ChevronLeft, ChevronRight, Menu, X, Home, Compass, Book, Highlighter
+  ChevronLeft, ChevronRight, Menu, X, Home, Compass, Book, Highlighter,
+  Search, StickyNote, Flame, LogIn, LogOut, User
 } from 'lucide-react';
 
 const navItems = [
   { path: '/', label: 'Dashboard', icon: Home },
   { path: '/bible', label: 'Bible (KJV)', icon: Book },
+  { path: '/search', label: 'Search', icon: Search },
   { path: '/highlights', label: 'Highlights', icon: Highlighter },
+  { path: '/notes', label: 'Notes & Bookmarks', icon: StickyNote },
+  { path: '/reading-plans', label: 'Reading Plans', icon: Flame },
   { path: '/study-guide', label: 'Study Guide', icon: BookOpen },
   { path: '/hebrew', label: 'Hebrew', icon: Languages },
   { path: '/greek', label: 'Greek', icon: GraduationCap },
@@ -21,6 +26,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
+  const { user, signOut, loading: authLoading } = useAuth();
 
   return (
     <div className="min-h-screen flex bg-background">
@@ -97,10 +103,28 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           })}
         </nav>
 
-        {/* Footer */}
+        {/* Footer / Auth */}
         {!collapsed && (
-          <div className="p-4 border-t border-border">
-            <p className="text-xs text-muted-foreground font-mono">v2.0 · Training System</p>
+          <div className="p-3 border-t border-border space-y-2">
+            {user ? (
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 bg-primary/10 rounded-full flex items-center justify-center">
+                  <User size={14} className="text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs text-foreground font-medium truncate">{user.email}</p>
+                </div>
+                <button onClick={() => signOut()} className="text-muted-foreground hover:text-foreground" title="Sign out">
+                  <LogOut size={14} />
+                </button>
+              </div>
+            ) : (
+              <Link to="/auth" onClick={() => setMobileOpen(false)}
+                className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium text-primary hover:bg-primary/10 transition-colors">
+                <LogIn size={16} /> Sign In
+              </Link>
+            )}
+            <p className="text-xs text-muted-foreground font-mono">v3.0 · Scripture Intelligence</p>
           </div>
         )}
       </aside>

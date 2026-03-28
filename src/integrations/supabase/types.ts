@@ -14,7 +14,174 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      bookmarks: {
+        Row: {
+          collection: string | null
+          created_at: string
+          id: string
+          label: string | null
+          reference: string
+          user_id: string
+        }
+        Insert: {
+          collection?: string | null
+          created_at?: string
+          id?: string
+          label?: string | null
+          reference: string
+          user_id: string
+        }
+        Update: {
+          collection?: string | null
+          created_at?: string
+          id?: string
+          label?: string | null
+          reference?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      highlights: {
+        Row: {
+          color: string
+          created_at: string
+          id: string
+          reference: string
+          source: string
+          text: string
+          user_id: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          id?: string
+          reference: string
+          source?: string
+          text: string
+          user_id: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          id?: string
+          reference?: string
+          source?: string
+          text?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      reading_progress: {
+        Row: {
+          book_name: string
+          chapter: number
+          completed_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          book_name: string
+          chapter: number
+          completed_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          book_name?: string
+          chapter?: number
+          completed_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      reading_streaks: {
+        Row: {
+          current_streak: number
+          id: string
+          last_read_date: string | null
+          longest_streak: number
+          total_chapters_read: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          current_streak?: number
+          id?: string
+          last_read_date?: string | null
+          longest_streak?: number
+          total_chapters_read?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          current_streak?: number
+          id?: string
+          last_read_date?: string | null
+          longest_streak?: number
+          total_chapters_read?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      study_notes: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          reference: string
+          tags: string[] | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          reference: string
+          tags?: string[] | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          reference?: string
+          tags?: string[] | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
