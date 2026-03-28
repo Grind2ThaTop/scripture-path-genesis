@@ -37,6 +37,7 @@ import LibraryPage from "./pages/LibraryPage";
 import MembersPage from "./pages/MembersPage";
 import DiscernmentPage from "./pages/DiscernmentPage";
 import YahwehIsOnePage from "./pages/YahwehIsOnePage";
+import ShortsEngine from "./pages/ShortsEngine";
 import AdminRoute from "./components/AdminRoute";
 import NotFound from "./pages/NotFound";
 
