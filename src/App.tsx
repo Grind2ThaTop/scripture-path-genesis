@@ -36,6 +36,7 @@ import OnboardingPage from "./pages/OnboardingPage";
 import LibraryPage from "./pages/LibraryPage";
 import MembersPage from "./pages/MembersPage";
 import DiscernmentPage from "./pages/DiscernmentPage";
+import YahwehIsOnePage from "./pages/YahwehIsOnePage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
