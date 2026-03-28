@@ -91,6 +91,8 @@ const App = () => (
               <Route path="*" element={<NotFound />} />
             </Routes>
           </AppLayout>
+          <BackgroundTasksOverlay />
+          </BackgroundTasksProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
