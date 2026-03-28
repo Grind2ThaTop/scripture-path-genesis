@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, ArrowLeft, BookOpen, Users, Shield, Flame, Crown, CheckCircle2 } from 'lucide-react';
+import { ArrowRight, ArrowLeft, BookOpen, Users, Shield, Flame, Crown, CheckCircle2, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
