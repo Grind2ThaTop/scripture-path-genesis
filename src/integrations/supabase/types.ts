@@ -479,6 +479,69 @@ export type Database = {
         }
         Relationships: []
       }
+      viral_content: {
+        Row: {
+          biblical_angle: string
+          controversy: string | null
+          core_topic: string | null
+          created_at: string
+          emotional_trigger: string | null
+          id: string
+          ig_caption: string | null
+          scripture_reference: string
+          scripture_text: string
+          source_description: string | null
+          source_platform: string
+          source_title: string
+          source_url: string | null
+          status: string
+          tags: string[] | null
+          tiktok_script: string | null
+          viral_score: number | null
+          youtube_short_script: string | null
+        }
+        Insert: {
+          biblical_angle: string
+          controversy?: string | null
+          core_topic?: string | null
+          created_at?: string
+          emotional_trigger?: string | null
+          id?: string
+          ig_caption?: string | null
+          scripture_reference: string
+          scripture_text: string
+          source_description?: string | null
+          source_platform?: string
+          source_title: string
+          source_url?: string | null
+          status?: string
+          tags?: string[] | null
+          tiktok_script?: string | null
+          viral_score?: number | null
+          youtube_short_script?: string | null
+        }
+        Update: {
+          biblical_angle?: string
+          controversy?: string | null
+          core_topic?: string | null
+          created_at?: string
+          emotional_trigger?: string | null
+          id?: string
+          ig_caption?: string | null
+          scripture_reference?: string
+          scripture_text?: string
+          source_description?: string | null
+          source_platform?: string
+          source_title?: string
+          source_url?: string | null
+          status?: string
+          tags?: string[] | null
+          tiktok_script?: string | null
+          viral_score?: number | null
+          youtube_short_script?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

@@ -5,7 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import {
   BookOpen, GraduationCap, Languages, BarChart3,
   ChevronLeft, ChevronRight, Menu, X, Home, Compass, Book, Highlighter,
-  Search, StickyNote, Flame, LogIn, LogOut, User, Share2, Users, Crown, Sword, Eye
+  Search, StickyNote, Flame, LogIn, LogOut, User, Share2, Users, Crown, Sword, Eye, Zap
 } from 'lucide-react';
 
 const navItems = [
@@ -14,6 +14,7 @@ const navItems = [
   { path: '/bible', label: 'Bible (KJV)', icon: Book },
   { path: '/search', label: 'Search', icon: Search },
   { path: '/prophecy', label: 'Truth Cuts Deep', icon: Eye },
+  { path: '/viral', label: 'Viral Engine', icon: Zap },
   { path: '/community', label: 'The Narrow Path', icon: Users },
   { path: '/progression', label: 'Your Level', icon: Crown },
   { path: '/highlights', label: 'Highlights', icon: Highlighter },
