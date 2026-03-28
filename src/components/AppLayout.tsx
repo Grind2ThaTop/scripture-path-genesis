@@ -10,8 +10,11 @@ import {
 
 const navItems = [
   { path: '/', label: 'Dashboard', icon: Home },
+  { path: '/daily', label: 'Daily Discipline', icon: Sword },
   { path: '/bible', label: 'Bible (KJV)', icon: Book },
   { path: '/search', label: 'Search', icon: Search },
+  { path: '/community', label: 'The Narrow Path', icon: Users },
+  { path: '/progression', label: 'Your Level', icon: Crown },
   { path: '/highlights', label: 'Highlights', icon: Highlighter },
   { path: '/notes', label: 'Notes & Bookmarks', icon: StickyNote },
   { path: '/reading-plans', label: 'Reading Plans', icon: Flame },

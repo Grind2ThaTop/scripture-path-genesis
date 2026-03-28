@@ -53,6 +53,9 @@ const App = () => (
               <Route path="/bible" element={<BibleReader />} />
               <Route path="/highlights" element={<Highlights />} />
               <Route path="/share" element={<SharePage />} />
+              <Route path="/community" element={<CommunityPage />} />
+              <Route path="/progression" element={<ProgressionPage />} />
+              <Route path="/daily" element={<DailyDisciplinePage />} />
               <Route path="/life-situations" element={<LifeSituations />} />
               <Route path="/progress" element={<Progress />} />
               <Route path="*" element={<NotFound />} />
