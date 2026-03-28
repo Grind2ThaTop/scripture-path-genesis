@@ -686,7 +686,7 @@ export default function ShortsEngine() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-5 w-full">
+        <TabsList className="grid grid-cols-6 w-full">
           <TabsTrigger value="create" className="flex items-center gap-1.5">
             <Sparkles className="w-3.5 h-3.5" /> Create
           </TabsTrigger>
@@ -698,6 +698,10 @@ export default function ShortsEngine() {
           </TabsTrigger>
           <TabsTrigger value="voice" className="flex items-center gap-1.5">
             <Mic className="w-3.5 h-3.5" /> Voice
+          </TabsTrigger>
+          <TabsTrigger value="music" className="flex items-center gap-1.5">
+            <Music className="w-3.5 h-3.5" /> Music
+            {musicUrl && <CheckCircle2 className="w-3 h-3 text-green-500" />}
           </TabsTrigger>
           <TabsTrigger value="export" className="flex items-center gap-1.5">
             <Download className="w-3.5 h-3.5" /> Export
