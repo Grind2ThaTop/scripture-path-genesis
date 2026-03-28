@@ -191,7 +191,7 @@ serve(async (req) => {
     if (action === "poll_music") {
       if (!generation_id) throw new Error("generation_id required for polling");
 
-      const pollResponse = await fetch(`https://api.aimlapi.com/v2/generate/audio?generation_id=${gid}`, {
+      const pollResponse = await fetch(`https://api.aimlapi.com/v2/generate/audio?generation_id=${generation_id}`, {
         method: "GET",
         headers: { "Authorization": `Bearer ${AIMLAPI_API_KEY}` },
       });
