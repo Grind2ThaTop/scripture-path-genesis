@@ -94,10 +94,11 @@ interface ShortProject {
   scenes: Scene[];
 }
 
-// Canvas video renderer - renders scenes with motion effects and captions
+// Canvas video renderer with Hormozi-style captions and audio
 async function renderVideoToBlob(
   scenes: Scene[],
-  onProgress: (pct: number, msg: string) => void
+  onProgress: (pct: number, msg: string) => void,
+  musicUrl?: string | null,
 ): Promise<Blob> {
   const WIDTH = 1080;
   const HEIGHT = 1920;
@@ -116,9 +117,9 @@ async function renderVideoToBlob(
       try {
         const img = new Image();
         img.crossOrigin = "anonymous";
-        await new Promise<void>((resolve, reject) => {
+        await new Promise<void>((resolve) => {
           img.onload = () => resolve();
-          img.onerror = () => resolve(); // fallback to solid color
+          img.onerror = () => resolve();
           img.src = scenes[i].generated_image_url!;
         });
         images.push(img);
@@ -130,14 +131,97 @@ async function renderVideoToBlob(
     }
   }
 
+  // Prepare audio context for mixing narration + music
+  onProgress(10, "Preparing audio...");
+  const audioCtx = new AudioContext({ sampleRate: 44100 });
+  const totalDurationSec = scenes.reduce((s, sc) => s + sc.duration_ms / 1000, 0);
+
+  // Load narration audio per scene
+  const narrationBuffers: (AudioBuffer | null)[] = [];
+  for (const scene of scenes) {
+    if (scene.audio_base64) {
+      try {
+        const binary = atob(scene.audio_base64);
+        const bytes = new Uint8Array(binary.length);
+        for (let j = 0; j < binary.length; j++) bytes[j] = binary.charCodeAt(j);
+        const buffer = await audioCtx.decodeAudioData(bytes.buffer);
+        narrationBuffers.push(buffer);
+      } catch { narrationBuffers.push(null); }
+    } else {
+      narrationBuffers.push(null);
+    }
+  }
+
+  // Load background music
+  let musicBuffer: AudioBuffer | null = null;
+  if (musicUrl) {
+    try {
+      const resp = await fetch(musicUrl);
+      const arrBuf = await resp.arrayBuffer();
+      musicBuffer = await audioCtx.decodeAudioData(arrBuf);
+    } catch (e) { console.warn("Failed to load music:", e); }
+  }
+
+  // Mix all audio into a single offline buffer
+  const offlineCtx = new OfflineAudioContext(2, Math.ceil(totalDurationSec * 44100), 44100);
+
+  // Add music (looped if shorter than total, reduced volume)
+  if (musicBuffer) {
+    const musicSrc = offlineCtx.createBufferSource();
+    musicSrc.buffer = musicBuffer;
+    musicSrc.loop = true;
+    const gainNode = offlineCtx.createGain();
+    gainNode.gain.value = 0.25; // Background level
+    musicSrc.connect(gainNode);
+    gainNode.connect(offlineCtx.destination);
+    musicSrc.start(0);
+  }
+
+  // Add narrations at correct time offsets
+  let timeOffset = 0;
+  for (let i = 0; i < scenes.length; i++) {
+    if (narrationBuffers[i]) {
+      const src = offlineCtx.createBufferSource();
+      src.buffer = narrationBuffers[i]!;
+      const gain = offlineCtx.createGain();
+      gain.gain.value = 1.0;
+      src.connect(gain);
+      gain.connect(offlineCtx.destination);
+      src.start(timeOffset + 0.3); // Small delay for scene transition
+    }
+    timeOffset += scenes[i].duration_ms / 1000;
+  }
+
+  onProgress(12, "Mixing audio...");
+  const mixedBuffer = await offlineCtx.startRendering();
+
+  // Encode mixed audio as WAV
+  const wavBlob = audioBufferToWav(mixedBuffer);
+
   onProgress(15, "Setting up video encoder...");
 
-  const stream = canvas.captureStream(FPS);
-  const mediaRecorder = new MediaRecorder(stream, {
-    mimeType: MediaRecorder.isTypeSupported("video/webm;codecs=vp9")
-      ? "video/webm;codecs=vp9"
-      : "video/webm",
+  // Create audio element from mixed audio and add to stream
+  const audioElement = new Audio(URL.createObjectURL(wavBlob));
+  audioElement.volume = 1;
+  const audioStream = (audioElement as any).captureStream ? (audioElement as any).captureStream() : null;
+
+  const videoStream = canvas.captureStream(FPS);
+
+  // Combine video + audio streams
+  const combinedTracks = [...videoStream.getTracks()];
+  if (audioStream) {
+    audioStream.getAudioTracks().forEach((t: MediaStreamTrack) => combinedTracks.push(t));
+  }
+  const combinedStream = new MediaStream(combinedTracks);
+
+  const mediaRecorder = new MediaRecorder(combinedStream, {
+    mimeType: MediaRecorder.isTypeSupported("video/webm;codecs=vp9,opus")
+      ? "video/webm;codecs=vp9,opus"
+      : MediaRecorder.isTypeSupported("video/webm;codecs=vp8,opus")
+        ? "video/webm;codecs=vp8,opus"
+        : "video/webm",
     videoBitsPerSecond: 8_000_000,
+    audioBitsPerSecond: 128_000,
   });
 
   const chunks: Blob[] = [];
@@ -152,6 +236,7 @@ async function renderVideoToBlob(
   });
 
   mediaRecorder.start();
+  audioElement.play().catch(() => {});
 
   // Render each scene frame by frame
   const totalFrames = scenes.reduce((sum, s) => sum + Math.round((s.duration_ms / 1000) * FPS), 0);
@@ -161,6 +246,10 @@ async function renderVideoToBlob(
     const scene = scenes[si];
     const sceneFrames = Math.round((scene.duration_ms / 1000) * FPS);
     const img = images[si];
+
+    // Hormozi caption: split into words, highlight word by word
+    const words = (scene.caption_text || "").split(/\s+/).filter(Boolean);
+    const wordsPerFrame = words.length > 0 ? sceneFrames / words.length : 1;
 
     for (let f = 0; f < sceneFrames; f++) {
       const progress = f / sceneFrames;
@@ -173,9 +262,7 @@ async function renderVideoToBlob(
       if (img) {
         ctx.save();
         const motion = scene.motion_type || "ken-burns";
-        let scale = 1;
-        let offsetX = 0;
-        let offsetY = 0;
+        let scale = 1, offsetX = 0, offsetY = 0;
 
         if (motion === "ken-burns") {
           scale = 1 + progress * 0.15;
@@ -193,7 +280,7 @@ async function renderVideoToBlob(
 
         const imgAspect = img.width / img.height;
         const canvasAspect = WIDTH / HEIGHT;
-        let drawW, drawH;
+        let drawW: number, drawH: number;
         if (imgAspect > canvasAspect) {
           drawH = HEIGHT * scale;
           drawW = drawH * imgAspect;
@@ -201,18 +288,14 @@ async function renderVideoToBlob(
           drawW = WIDTH * scale;
           drawH = drawW / imgAspect;
         }
-        const dx = (WIDTH - drawW) / 2 + offsetX;
-        const dy = (HEIGHT - drawH) / 2 + offsetY;
 
-        // Fade in first 10 frames, fade out last 10
         const fadeIn = Math.min(f / 10, 1);
         const fadeOut = Math.min((sceneFrames - f) / 10, 1);
         ctx.globalAlpha = fadeIn * fadeOut;
-        ctx.drawImage(img, dx, dy, drawW, drawH);
+        ctx.drawImage(img, (WIDTH - drawW) / 2 + offsetX, (HEIGHT - drawH) / 2 + offsetY, drawW, drawH);
         ctx.globalAlpha = 1;
         ctx.restore();
       } else {
-        // Gradient fallback
         const grad = ctx.createLinearGradient(0, 0, 0, HEIGHT);
         grad.addColorStop(0, "#1a0a0a");
         grad.addColorStop(1, "#0a0a1a");
@@ -220,72 +303,136 @@ async function renderVideoToBlob(
         ctx.fillRect(0, 0, WIDTH, HEIGHT);
       }
 
-      // Dark overlay for text readability
-      ctx.fillStyle = "rgba(0,0,0,0.35)";
-      ctx.fillRect(0, 0, WIDTH, HEIGHT);
+      // Darker overlay at bottom for caption area
+      const overlayGrad = ctx.createLinearGradient(0, HEIGHT * 0.55, 0, HEIGHT);
+      overlayGrad.addColorStop(0, "rgba(0,0,0,0)");
+      overlayGrad.addColorStop(0.3, "rgba(0,0,0,0.6)");
+      overlayGrad.addColorStop(1, "rgba(0,0,0,0.85)");
+      ctx.fillStyle = overlayGrad;
+      ctx.fillRect(0, HEIGHT * 0.55, WIDTH, HEIGHT * 0.45);
 
-      // Caption text - center of screen, bold
-      if (scene.caption_text) {
-        const captionY = HEIGHT * 0.45;
-        ctx.save();
-        ctx.textAlign = "center";
-        ctx.fillStyle = "#ffffff";
-        ctx.shadowColor = "rgba(0,0,0,0.8)";
-        ctx.shadowBlur = 20;
-        ctx.font = "bold 64px sans-serif";
+      // === HORMOZI CAPTIONS ===
+      if (words.length > 0) {
+        const activeWordIndex = Math.min(Math.floor(f / wordsPerFrame), words.length - 1);
+        const captionY = HEIGHT * 0.72;
+        const fontSize = 88;
+        const lineHeight = 110;
 
-        // Word wrap
-        const words = scene.caption_text.split(" ");
-        const lines: string[] = [];
-        let currentLine = "";
-        for (const word of words) {
-          const test = currentLine ? `${currentLine} ${word}` : word;
-          if (ctx.measureText(test).width > WIDTH * 0.85) {
-            lines.push(currentLine);
-            currentLine = word;
-          } else {
-            currentLine = test;
+        // Build lines with word wrapping
+        ctx.font = `900 ${fontSize}px "Arial Black", "Impact", sans-serif`;
+        const captionLines: { word: string; wordIdx: number }[][] = [];
+        let currentLine: { word: string; wordIdx: number }[] = [];
+        let currentWidth = 0;
+        const maxWidth = WIDTH * 0.88;
+
+        words.forEach((word, wi) => {
+          const wordWidth = ctx.measureText(word + " ").width;
+          if (currentWidth + wordWidth > maxWidth && currentLine.length > 0) {
+            captionLines.push(currentLine);
+            currentLine = [];
+            currentWidth = 0;
+          }
+          currentLine.push({ word, wordIdx: wi });
+          currentWidth += wordWidth;
+        });
+        if (currentLine.length > 0) captionLines.push(currentLine);
+
+        // Only show 2-3 lines centered around active word
+        let activeLineIdx = 0;
+        for (let li = 0; li < captionLines.length; li++) {
+          if (captionLines[li].some(w => w.wordIdx === activeWordIndex)) {
+            activeLineIdx = li;
+            break;
           }
         }
-        if (currentLine) lines.push(currentLine);
+        const startLine = Math.max(0, activeLineIdx - 1);
+        const endLine = Math.min(captionLines.length, startLine + 3);
+        const visibleLines = captionLines.slice(startLine, endLine);
 
-        const lineHeight = 80;
-        const startY = captionY - ((lines.length - 1) * lineHeight) / 2;
+        const totalHeight = visibleLines.length * lineHeight;
+        const startYPos = captionY - totalHeight / 2;
 
-        // Animate text in word by word
-        const textProgress = Math.min(f / 15, 1);
-        ctx.globalAlpha = textProgress;
+        visibleLines.forEach((line, li) => {
+          let xPos = WIDTH / 2;
+          const lineText = line.map(w => w.word).join(" ");
+          const fullWidth = ctx.measureText(lineText).width;
+          let drawX = xPos - fullWidth / 2;
 
-        lines.forEach((line, li) => {
-          ctx.fillText(line, WIDTH / 2, startY + li * lineHeight);
+          line.forEach(({ word, wordIdx }) => {
+            const wWidth = ctx.measureText(word).width;
+            const isActive = wordIdx === activeWordIndex;
+            const isPast = wordIdx < activeWordIndex;
+
+            ctx.save();
+            ctx.textAlign = "left";
+            ctx.textBaseline = "middle";
+
+            if (isActive) {
+              // Active word: yellow highlight box + white bold text + scale pop
+              const pad = 12;
+              const boxScale = 1.05 + Math.sin(f * 0.3) * 0.02;
+              ctx.save();
+              const wordCenterX = drawX + wWidth / 2;
+              const wordCenterY = startYPos + li * lineHeight;
+              ctx.translate(wordCenterX, wordCenterY);
+              ctx.scale(boxScale, boxScale);
+              ctx.translate(-wordCenterX, -wordCenterY);
+
+              // Yellow highlight background
+              ctx.fillStyle = "#FFD700";
+              const radius = 10;
+              const bx = drawX - pad;
+              const by = startYPos + li * lineHeight - fontSize / 2 - pad / 2;
+              const bw = wWidth + pad * 2;
+              const bh = fontSize + pad;
+              ctx.beginPath();
+              ctx.moveTo(bx + radius, by);
+              ctx.lineTo(bx + bw - radius, by);
+              ctx.quadraticCurveTo(bx + bw, by, bx + bw, by + radius);
+              ctx.lineTo(bx + bw, by + bh - radius);
+              ctx.quadraticCurveTo(bx + bw, by + bh, bx + bw - radius, by + bh);
+              ctx.lineTo(bx + radius, by + bh);
+              ctx.quadraticCurveTo(bx, by + bh, bx, by + bh - radius);
+              ctx.lineTo(bx, by + radius);
+              ctx.quadraticCurveTo(bx, by, bx + radius, by);
+              ctx.closePath();
+              ctx.fill();
+
+              // Black text on yellow
+              ctx.fillStyle = "#000000";
+              ctx.font = `900 ${fontSize}px "Arial Black", "Impact", sans-serif`;
+              ctx.fillText(word, drawX, startYPos + li * lineHeight);
+              ctx.restore();
+            } else {
+              // Non-active words: white with shadow
+              ctx.shadowColor = "rgba(0,0,0,0.9)";
+              ctx.shadowBlur = 15;
+              ctx.shadowOffsetY = 4;
+              ctx.fillStyle = isPast ? "rgba(255,255,255,0.6)" : "#ffffff";
+              ctx.font = `900 ${fontSize}px "Arial Black", "Impact", sans-serif`;
+              ctx.fillText(word, drawX, startYPos + li * lineHeight);
+            }
+
+            ctx.restore();
+            drawX += wWidth + ctx.measureText(" ").width;
+          });
         });
-
-        ctx.globalAlpha = 1;
-        ctx.restore();
       }
 
-      // Verse reference - bottom area
+      // Verse reference - subtle, bottom
       if (scene.verse_reference) {
         ctx.save();
         ctx.textAlign = "center";
-        ctx.fillStyle = "rgba(255,255,255,0.7)";
-        ctx.font = "italic 40px serif";
+        ctx.textBaseline = "middle";
+        ctx.fillStyle = "rgba(255,255,255,0.5)";
+        ctx.font = "italic 36px Georgia, serif";
         ctx.shadowColor = "rgba(0,0,0,0.6)";
-        ctx.shadowBlur = 10;
-        ctx.fillText(scene.verse_reference, WIDTH / 2, HEIGHT * 0.78);
+        ctx.shadowBlur = 8;
+        ctx.fillText(scene.verse_reference, WIDTH / 2, HEIGHT * 0.88);
         ctx.restore();
       }
 
-      // Scene number indicator (small, top-left)
-      ctx.save();
-      ctx.fillStyle = "rgba(255,255,255,0.3)";
-      ctx.font = "24px sans-serif";
-      ctx.fillText(`${si + 1}/${scenes.length}`, 40, 60);
-      ctx.restore();
-
-      // Wait for next frame
       await new Promise((resolve) => setTimeout(resolve, 1000 / FPS));
-
       globalFrame++;
       const pct = 15 + (globalFrame / totalFrames) * 80;
       onProgress(pct, `Rendering scene ${si + 1}/${scenes.length}...`);
@@ -293,9 +440,58 @@ async function renderVideoToBlob(
   }
 
   onProgress(95, "Finalizing video...");
+  audioElement.pause();
   mediaRecorder.stop();
+  audioCtx.close();
 
   return recordingDone;
+}
+
+// Convert AudioBuffer to WAV Blob
+function audioBufferToWav(buffer: AudioBuffer): Blob {
+  const numChannels = buffer.numberOfChannels;
+  const sampleRate = buffer.sampleRate;
+  const format = 1; // PCM
+  const bitDepth = 16;
+  const bytesPerSample = bitDepth / 8;
+  const blockAlign = numChannels * bytesPerSample;
+  const dataLength = buffer.length * blockAlign;
+  const headerLength = 44;
+  const totalLength = headerLength + dataLength;
+  const arrayBuffer = new ArrayBuffer(totalLength);
+  const view = new DataView(arrayBuffer);
+
+  const writeString = (offset: number, str: string) => {
+    for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i));
+  };
+
+  writeString(0, "RIFF");
+  view.setUint32(4, totalLength - 8, true);
+  writeString(8, "WAVE");
+  writeString(12, "fmt ");
+  view.setUint32(16, 16, true);
+  view.setUint16(20, format, true);
+  view.setUint16(22, numChannels, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * blockAlign, true);
+  view.setUint16(32, blockAlign, true);
+  view.setUint16(34, bitDepth, true);
+  writeString(36, "data");
+  view.setUint32(40, dataLength, true);
+
+  const channels = [];
+  for (let i = 0; i < numChannels; i++) channels.push(buffer.getChannelData(i));
+
+  let offset = 44;
+  for (let i = 0; i < buffer.length; i++) {
+    for (let ch = 0; ch < numChannels; ch++) {
+      const sample = Math.max(-1, Math.min(1, channels[ch][i]));
+      view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
+      offset += 2;
+    }
+  }
+
+  return new Blob([arrayBuffer], { type: "audio/wav" });
 }
 
 export default function ShortsEngine() {
