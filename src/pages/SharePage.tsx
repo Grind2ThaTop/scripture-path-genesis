@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Download, Share2, Type, Image as ImageIcon, Palette, RotateCcw, ChevronDown, Plus, Minus, AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
+import { ArrowLeft, Download, Share2, Type, Image as ImageIcon, Palette, RotateCcw, AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -10,35 +10,60 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Slider } from '@/components/ui/slider';
 import { toast } from 'sonner';
 
+// Import template images
+import torahScrollImg from '@/assets/templates/torah-scroll.jpg';
+import openBibleImg from '@/assets/templates/open-bible.jpg';
+import burningBushImg from '@/assets/templates/burning-bush.jpg';
+import partingSeaImg from '@/assets/templates/parting-sea.jpg';
+import stoneTabletsImg from '@/assets/templates/stone-tablets.jpg';
+import starsCovenantImg from '@/assets/templates/stars-covenant.jpg';
+import oliveTreeImg from '@/assets/templates/olive-tree.jpg';
+import jerusalemSunriseImg from '@/assets/templates/jerusalem-sunrise.jpg';
+import lionJudahImg from '@/assets/templates/lion-judah.jpg';
+import livingWaterImg from '@/assets/templates/living-water.jpg';
+import menorahImg from '@/assets/templates/menorah.jpg';
+import pillarFireImg from '@/assets/templates/pillar-fire.jpg';
+
 interface Template {
   id: string;
   name: string;
   category: string;
-  bgType: 'gradient' | 'solid' | 'image';
-  bg: string;
+  type: 'image' | 'gradient';
+  bg: string; // image src or gradient CSS
   textColor: string;
   accentColor: string;
-  fontFamily: string;
-  layout: 'centered' | 'bottom' | 'left' | 'overlay';
-  overlayOpacity: number;
+  overlay: number; // default overlay darkness
+  layout: 'centered' | 'bottom' | 'top';
 }
 
 const TEMPLATES: Template[] = [
-  // Dark & Bold
-  { id: 'covenant-gold', name: 'Covenant Gold', category: 'Dark', bgType: 'gradient', bg: 'linear-gradient(145deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)', textColor: '#e2c87e', accentColor: '#c9a84c', fontFamily: 'Cormorant Garamond', layout: 'centered', overlayOpacity: 0 },
-  { id: 'burning-bush', name: 'Burning Bush', category: 'Fire', bgType: 'gradient', bg: 'linear-gradient(135deg, #1a0000 0%, #3d0c02 30%, #8b2500 70%, #c94418 100%)', textColor: '#ffd7b5', accentColor: '#ff9544', fontFamily: 'Cormorant Garamond', layout: 'centered', overlayOpacity: 0 },
-  { id: 'deep-waters', name: 'Deep Waters', category: 'Nature', bgType: 'gradient', bg: 'linear-gradient(180deg, #0a1628 0%, #0d253f 40%, #1a4a6e 80%, #2980b9 100%)', textColor: '#d4e8f7', accentColor: '#6fb3de', fontFamily: 'Cormorant Garamond', layout: 'bottom', overlayOpacity: 0 },
-  { id: 'olive-branch', name: 'Olive Branch', category: 'Nature', bgType: 'gradient', bg: 'linear-gradient(145deg, #1a1e0a 0%, #2d3316 30%, #4a5828 70%, #6b7f32 100%)', textColor: '#e8e4c9', accentColor: '#c4b86c', fontFamily: 'Cormorant Garamond', layout: 'centered', overlayOpacity: 0 },
-  { id: 'royal-purple', name: 'Royal Purple', category: 'Royal', bgType: 'gradient', bg: 'linear-gradient(135deg, #1a0a2e 0%, #2d1450 40%, #4a1f7a 80%, #6b2fa0 100%)', textColor: '#e8d5f5', accentColor: '#c9a0e8', fontFamily: 'Cormorant Garamond', layout: 'centered', overlayOpacity: 0 },
-  // Light & Clean
-  { id: 'morning-light', name: 'Morning Light', category: 'Light', bgType: 'gradient', bg: 'linear-gradient(180deg, #fdf6e3 0%, #fceabb 50%, #f8d56b 100%)', textColor: '#2c1810', accentColor: '#8b5e3c', fontFamily: 'Cormorant Garamond', layout: 'centered', overlayOpacity: 0 },
-  { id: 'pure-white', name: 'Pure White', category: 'Light', bgType: 'gradient', bg: 'linear-gradient(180deg, #ffffff 0%, #f5f0e8 100%)', textColor: '#1a1a2e', accentColor: '#c9a84c', fontFamily: 'Cormorant Garamond', layout: 'centered', overlayOpacity: 0 },
-  { id: 'parchment', name: 'Ancient Parchment', category: 'Classic', bgType: 'gradient', bg: 'linear-gradient(145deg, #f5e6c8 0%, #e8d5a8 50%, #d4c090 100%)', textColor: '#3d2b1f', accentColor: '#8b5e3c', fontFamily: 'Cormorant Garamond', layout: 'centered', overlayOpacity: 0 },
-  // Dramatic
-  { id: 'midnight-prayer', name: 'Midnight Prayer', category: 'Dark', bgType: 'solid', bg: '#0a0a0f', textColor: '#ffffff', accentColor: '#c9a84c', fontFamily: 'Cormorant Garamond', layout: 'centered', overlayOpacity: 0 },
-  { id: 'blood-covenant', name: 'Blood Covenant', category: 'Fire', bgType: 'gradient', bg: 'linear-gradient(180deg, #0a0000 0%, #2d0000 40%, #5c0000 100%)', textColor: '#ff9999', accentColor: '#ff4444', fontFamily: 'Cormorant Garamond', layout: 'centered', overlayOpacity: 0 },
-  { id: 'heavens-declare', name: 'Heavens Declare', category: 'Nature', bgType: 'gradient', bg: 'linear-gradient(180deg, #000022 0%, #000044 30%, #001155 60%, #003388 100%)', textColor: '#ccddff', accentColor: '#6699ff', fontFamily: 'Cormorant Garamond', layout: 'bottom', overlayOpacity: 0 },
-  { id: 'desert-sand', name: 'Desert Sand', category: 'Classic', bgType: 'gradient', bg: 'linear-gradient(145deg, #c2956a 0%, #d4a574 30%, #e8c49a 60%, #f0dbb8 100%)', textColor: '#2c1810', accentColor: '#6b3a1f', fontFamily: 'Cormorant Garamond', layout: 'left', overlayOpacity: 0 },
+  // 📖 Scripture & Scrolls
+  { id: 'torah-scroll', name: 'Torah Scroll', category: 'Scripture', type: 'image', bg: torahScrollImg, textColor: '#ffffff', accentColor: '#e2c87e', overlay: 0.55, layout: 'centered' },
+  { id: 'open-bible', name: 'Open Bible', category: 'Scripture', type: 'image', bg: openBibleImg, textColor: '#ffffff', accentColor: '#e2c87e', overlay: 0.5, layout: 'centered' },
+  { id: 'stone-tablets', name: 'Stone Tablets', category: 'Scripture', type: 'image', bg: stoneTabletsImg, textColor: '#ffffff', accentColor: '#d4a84c', overlay: 0.5, layout: 'centered' },
+
+  // 🔥 Fire & Power
+  { id: 'burning-bush', name: 'Burning Bush', category: 'Fire', type: 'image', bg: burningBushImg, textColor: '#ffffff', accentColor: '#ff9544', overlay: 0.45, layout: 'centered' },
+  { id: 'pillar-fire', name: 'Pillar of Fire', category: 'Fire', type: 'image', bg: pillarFireImg, textColor: '#ffffff', accentColor: '#ffaa44', overlay: 0.4, layout: 'top' },
+  { id: 'menorah', name: 'Temple Menorah', category: 'Fire', type: 'image', bg: menorahImg, textColor: '#ffffff', accentColor: '#e2c87e', overlay: 0.5, layout: 'centered' },
+
+  // 🌍 Land & Nature
+  { id: 'parting-sea', name: 'Parting the Sea', category: 'Epic', type: 'image', bg: partingSeaImg, textColor: '#ffffff', accentColor: '#6fb3de', overlay: 0.4, layout: 'top' },
+  { id: 'olive-tree', name: 'Olive Tree', category: 'Nature', type: 'image', bg: oliveTreeImg, textColor: '#ffffff', accentColor: '#c4b86c', overlay: 0.45, layout: 'bottom' },
+  { id: 'jerusalem', name: 'Jerusalem Sunrise', category: 'Land', type: 'image', bg: jerusalemSunriseImg, textColor: '#ffffff', accentColor: '#e2c87e', overlay: 0.4, layout: 'top' },
+
+  // 🦁 Power & Covenant
+  { id: 'lion-judah', name: 'Lion of Judah', category: 'Power', type: 'image', bg: lionJudahImg, textColor: '#ffffff', accentColor: '#e2c87e', overlay: 0.45, layout: 'centered' },
+  { id: 'stars-covenant', name: "Abraham's Stars", category: 'Covenant', type: 'image', bg: starsCovenantImg, textColor: '#ffffff', accentColor: '#aabbff', overlay: 0.35, layout: 'top' },
+  { id: 'living-water', name: 'Living Water', category: 'Spirit', type: 'image', bg: livingWaterImg, textColor: '#ffffff', accentColor: '#88ccee', overlay: 0.4, layout: 'centered' },
+
+  // 🎨 Gradient classics
+  { id: 'covenant-gold', name: 'Covenant Gold', category: 'Classic', type: 'gradient', bg: 'linear-gradient(145deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)', textColor: '#e2c87e', accentColor: '#c9a84c', overlay: 0, layout: 'centered' },
+  { id: 'midnight-prayer', name: 'Midnight', category: 'Classic', type: 'gradient', bg: '#0a0a0f', textColor: '#ffffff', accentColor: '#c9a84c', overlay: 0, layout: 'centered' },
+  { id: 'parchment', name: 'Parchment', category: 'Classic', type: 'gradient', bg: 'linear-gradient(145deg, #f5e6c8 0%, #e8d5a8 50%, #d4c090 100%)', textColor: '#3d2b1f', accentColor: '#8b5e3c', overlay: 0, layout: 'centered' },
+  { id: 'blood-covenant', name: 'Blood Covenant', category: 'Classic', type: 'gradient', bg: 'linear-gradient(180deg, #0a0000 0%, #2d0000 40%, #5c0000 100%)', textColor: '#ff9999', accentColor: '#ff4444', overlay: 0, layout: 'centered' },
+  { id: 'royal-purple', name: 'Royal Purple', category: 'Classic', type: 'gradient', bg: 'linear-gradient(135deg, #1a0a2e 0%, #2d1450 40%, #4a1f7a 80%, #6b2fa0 100%)', textColor: '#e8d5f5', accentColor: '#c9a0e8', overlay: 0, layout: 'centered' },
+  { id: 'deep-waters', name: 'Deep Waters', category: 'Classic', type: 'gradient', bg: 'linear-gradient(180deg, #0a1628 0%, #0d253f 40%, #1a4a6e 80%, #2980b9 100%)', textColor: '#d4e8f7', accentColor: '#6fb3de', overlay: 0, layout: 'bottom' },
 ];
 
 const ASPECT_RATIOS = [
@@ -69,19 +94,115 @@ export default function SharePage() {
   const [customTextColor, setCustomTextColor] = useState<string | null>(null);
   const [customAccentColor, setCustomAccentColor] = useState<string | null>(null);
   const [watermark, setWatermark] = useState('דרך Derekh');
+  const [imageLoaded, setImageLoaded] = useState(false);
 
   const effectiveTextColor = customTextColor || selectedTemplate.textColor;
   const effectiveAccentColor = customAccentColor || selectedTemplate.accentColor;
+  const effectiveOverlay = customBgImage ? overlayOpacity : selectedTemplate.overlay;
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = (ev) => {
-      setCustomBgImage(ev.target?.result as string);
-    };
+    reader.onload = (ev) => setCustomBgImage(ev.target?.result as string);
     reader.readAsDataURL(file);
   };
+
+  const drawTextOnCanvas = useCallback((ctx: CanvasRenderingContext2D, W: number, H: number) => {
+    const pad = W * 0.1;
+    const maxW = W - pad * 2;
+    const scale = W / 1080;
+
+    // Verse text
+    const vSize = fontSize * scale;
+    ctx.font = `italic ${vSize}px "Cormorant Garamond", "Georgia", serif`;
+    ctx.fillStyle = effectiveTextColor;
+    ctx.textAlign = textAlign;
+    ctx.textBaseline = 'top';
+
+    const textX = textAlign === 'left' ? pad : textAlign === 'right' ? W - pad : W / 2;
+
+    // Word wrap
+    const words = verseText.split(' ');
+    const lines: string[] = [];
+    let currentLine = '';
+    for (const word of words) {
+      const testLine = currentLine ? `${currentLine} ${word}` : word;
+      if (ctx.measureText(testLine).width > maxW && currentLine) {
+        lines.push(currentLine);
+        currentLine = word;
+      } else {
+        currentLine = testLine;
+      }
+    }
+    if (currentLine) lines.push(currentLine);
+
+    const lineHeight = vSize * 1.5;
+    const totalTextHeight = lines.length * lineHeight;
+    const layout = selectedTemplate.layout;
+
+    let startY: number;
+    if (layout === 'top') {
+      startY = H * 0.12;
+    } else if (layout === 'bottom') {
+      startY = H - totalTextHeight - H * 0.25;
+    } else {
+      startY = H / 2 - totalTextHeight / 2 - H * 0.05;
+    }
+
+    // Text shadow for readability
+    ctx.shadowColor = 'rgba(0,0,0,0.7)';
+    ctx.shadowBlur = 8 * scale;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 2 * scale;
+
+    lines.forEach((line, i) => {
+      ctx.fillText(line, textX, startY + i * lineHeight);
+    });
+
+    // Reset shadow
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
+
+    // Decorative line
+    const lineY = startY + totalTextHeight + vSize * 0.6;
+    ctx.strokeStyle = effectiveAccentColor;
+    ctx.lineWidth = 2 * scale;
+    const decorW = Math.min(120 * scale, maxW * 0.3);
+    const lineStartX = textAlign === 'left' ? pad : textAlign === 'right' ? W - pad - decorW : W / 2 - decorW / 2;
+    ctx.beginPath();
+    ctx.moveTo(lineStartX, lineY);
+    ctx.lineTo(lineStartX + decorW, lineY);
+    ctx.stroke();
+
+    // Reference
+    const rSize = refFontSize * scale;
+    ctx.font = `600 ${rSize}px "IBM Plex Sans", "Helvetica", sans-serif`;
+    ctx.fillStyle = effectiveAccentColor;
+    ctx.shadowColor = 'rgba(0,0,0,0.5)';
+    ctx.shadowBlur = 4 * scale;
+    ctx.fillText(reference, textX, lineY + rSize * 1.2);
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
+
+    // Custom subtext
+    if (customSubtext) {
+      ctx.font = `${rSize * 0.75}px "IBM Plex Sans", sans-serif`;
+      ctx.fillStyle = effectiveTextColor + 'aa';
+      ctx.fillText(customSubtext, textX, lineY + rSize * 2.8);
+    }
+
+    // Watermark
+    if (watermark) {
+      const wmSize = 14 * scale;
+      ctx.font = `${wmSize}px "IBM Plex Sans", sans-serif`;
+      ctx.fillStyle = effectiveTextColor + '44';
+      ctx.textAlign = 'right';
+      ctx.fillText(watermark, W - pad * 0.5, H - pad * 0.4);
+    }
+  }, [verseText, reference, customSubtext, fontSize, refFontSize, textAlign, effectiveTextColor, effectiveAccentColor, watermark, selectedTemplate.layout]);
 
   const renderCanvas = useCallback(() => {
     const canvas = canvasRef.current;
@@ -94,137 +215,38 @@ export default function SharePage() {
     canvas.width = W;
     canvas.height = H;
 
-    const draw = () => {
-      // Background
-      if (customBgImage) {
-        const img = new window.Image();
-        img.crossOrigin = 'anonymous';
-        img.onload = () => {
-          // Cover fill
-          const scale = Math.max(W / img.width, H / img.height);
-          const x = (W - img.width * scale) / 2;
-          const y = (H - img.height * scale) / 2;
-          ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
-          // Overlay
-          ctx.fillStyle = `rgba(0,0,0,${overlayOpacity})`;
-          ctx.fillRect(0, 0, W, H);
-          drawText();
-        };
-        img.src = customBgImage;
-        return;
-      }
+    const bgSrc = customBgImage || (selectedTemplate.type === 'image' ? selectedTemplate.bg : null);
 
-      if (selectedTemplate.bgType === 'gradient') {
-        // Parse gradient
-        const gradCanvas = document.createElement('canvas');
-        gradCanvas.width = W;
-        gradCanvas.height = H;
-        const div = document.createElement('div');
-        div.style.cssText = `width:${W}px;height:${H}px;background:${selectedTemplate.bg}`;
-
-        // Manually parse gradient colors
-        const colorMatches = selectedTemplate.bg.match(/#[0-9a-fA-F]{6}/g) || [];
-        if (colorMatches.length >= 2) {
-          const isVertical = selectedTemplate.bg.includes('180deg');
-          const grad = isVertical
-            ? ctx.createLinearGradient(0, 0, 0, H)
-            : ctx.createLinearGradient(0, 0, W, H);
-          colorMatches.forEach((c, i) => {
-            grad.addColorStop(i / (colorMatches.length - 1), c);
-          });
-          ctx.fillStyle = grad;
-        } else {
-          ctx.fillStyle = '#1a1a2e';
-        }
+    if (bgSrc) {
+      const img = new window.Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        const scale = Math.max(W / img.width, H / img.height);
+        const x = (W - img.width * scale) / 2;
+        const y = (H - img.height * scale) / 2;
+        ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
+        // Overlay
+        ctx.fillStyle = `rgba(0,0,0,${effectiveOverlay})`;
+        ctx.fillRect(0, 0, W, H);
+        drawTextOnCanvas(ctx, W, H);
+        setImageLoaded(true);
+      };
+      img.src = bgSrc;
+    } else {
+      // Gradient or solid
+      const colorMatches = selectedTemplate.bg.match(/#[0-9a-fA-F]{6}/g) || [];
+      if (colorMatches.length >= 2) {
+        const isVert = selectedTemplate.bg.includes('180deg');
+        const grad = isVert ? ctx.createLinearGradient(0, 0, 0, H) : ctx.createLinearGradient(0, 0, W, H);
+        colorMatches.forEach((c, i) => grad.addColorStop(i / (colorMatches.length - 1), c));
+        ctx.fillStyle = grad;
       } else {
         ctx.fillStyle = selectedTemplate.bg;
       }
       ctx.fillRect(0, 0, W, H);
-      drawText();
-    };
-
-    const drawText = () => {
-      const pad = W * 0.1;
-      const maxW = W - pad * 2;
-      const scale = W / 1080; // scale relative to 1080 base
-
-      // Verse text
-      const vSize = fontSize * scale;
-      ctx.font = `italic ${vSize}px "${selectedTemplate.fontFamily}", serif`;
-      ctx.fillStyle = effectiveTextColor;
-      ctx.textAlign = textAlign;
-
-      const textX = textAlign === 'left' ? pad : textAlign === 'right' ? W - pad : W / 2;
-
-      // Word wrap
-      const words = verseText.split(' ');
-      const lines: string[] = [];
-      let currentLine = '';
-      for (const word of words) {
-        const testLine = currentLine ? `${currentLine} ${word}` : word;
-        const metrics = ctx.measureText(testLine);
-        if (metrics.width > maxW && currentLine) {
-          lines.push(currentLine);
-          currentLine = word;
-        } else {
-          currentLine = testLine;
-        }
-      }
-      if (currentLine) lines.push(currentLine);
-
-      const lineHeight = vSize * 1.5;
-      const totalTextHeight = lines.length * lineHeight;
-
-      // Position based on layout
-      let startY: number;
-      if (selectedTemplate.layout === 'bottom') {
-        startY = H - totalTextHeight - H * 0.2;
-      } else if (selectedTemplate.layout === 'left') {
-        startY = H / 2 - totalTextHeight / 2;
-      } else {
-        startY = H / 2 - totalTextHeight / 2 - H * 0.05;
-      }
-
-      lines.forEach((line, i) => {
-        ctx.fillText(line, textX, startY + i * lineHeight);
-      });
-
-      // Decorative line
-      const lineY = startY + totalTextHeight + vSize * 0.6;
-      ctx.strokeStyle = effectiveAccentColor;
-      ctx.lineWidth = 2 * scale;
-      const decorW = Math.min(120 * scale, maxW * 0.3);
-      const lineStartX = textAlign === 'left' ? pad : textAlign === 'right' ? W - pad - decorW : W / 2 - decorW / 2;
-      ctx.beginPath();
-      ctx.moveTo(lineStartX, lineY);
-      ctx.lineTo(lineStartX + decorW, lineY);
-      ctx.stroke();
-
-      // Reference
-      const rSize = refFontSize * scale;
-      ctx.font = `600 ${rSize}px "IBM Plex Sans", sans-serif`;
-      ctx.fillStyle = effectiveAccentColor;
-      ctx.fillText(reference, textX, lineY + rSize * 1.8);
-
-      // Custom subtext
-      if (customSubtext) {
-        ctx.font = `${rSize * 0.75}px "IBM Plex Sans", sans-serif`;
-        ctx.fillStyle = effectiveTextColor + 'aa';
-        ctx.fillText(customSubtext, textX, lineY + rSize * 3.2);
-      }
-
-      // Watermark
-      if (watermark) {
-        const wmSize = 14 * scale;
-        ctx.font = `${wmSize}px "IBM Plex Sans", sans-serif`;
-        ctx.fillStyle = effectiveTextColor + '44';
-        ctx.textAlign = 'right';
-        ctx.fillText(watermark, W - pad * 0.5, H - pad * 0.4);
-      }
-    };
-
-    draw();
-  }, [selectedTemplate, verseText, reference, customSubtext, aspectRatio, fontSize, refFontSize, textAlign, customBgImage, overlayOpacity, effectiveTextColor, effectiveAccentColor, watermark]);
+      drawTextOnCanvas(ctx, W, H);
+    }
+  }, [selectedTemplate, aspectRatio, customBgImage, effectiveOverlay, drawTextOnCanvas]);
 
   useEffect(() => {
     renderCanvas();
@@ -250,7 +272,6 @@ export default function SharePage() {
         const file = new File([blob], `${reference}.png`, { type: 'image/png' });
         await navigator.share({ title: reference, text: verseText, files: [file] });
       } else {
-        // Fallback: copy to clipboard
         await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
         toast.success('Image copied to clipboard!');
       }
@@ -259,13 +280,8 @@ export default function SharePage() {
     }
   };
 
-  const previewScale = previewRef.current
-    ? Math.min(
-        (previewRef.current.clientWidth - 32) / aspectRatio.width,
-        400 / aspectRatio.height,
-        1
-      )
-    : 0.4;
+  // Group templates by category
+  const categories = [...new Set(TEMPLATES.map(t => t.category))];
 
   return (
     <div className="space-y-6 pb-20">
@@ -276,11 +292,11 @@ export default function SharePage() {
         </Link>
         <div>
           <h1 className="text-2xl font-display font-bold text-foreground">Share the Truth</h1>
-          <p className="text-sm text-muted-foreground">Create beautiful scripture images to share</p>
+          <p className="text-sm text-muted-foreground">Create cinematic scripture images</p>
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-[1fr_380px] gap-6">
+      <div className="grid lg:grid-cols-[1fr_400px] gap-6">
         {/* Preview */}
         <div className="space-y-4">
           <div ref={previewRef} className="bg-card rounded-lg border border-border p-4 flex items-center justify-center min-h-[300px]">
@@ -306,14 +322,90 @@ export default function SharePage() {
 
         {/* Controls */}
         <div className="bg-card rounded-lg border border-border">
-          <Tabs defaultValue="text" className="w-full">
+          <Tabs defaultValue="template" className="w-full">
             <TabsList className="w-full grid grid-cols-3 rounded-t-lg rounded-b-none">
+              <TabsTrigger value="template" className="gap-1.5 text-xs"><Palette size={14} />Templates</TabsTrigger>
               <TabsTrigger value="text" className="gap-1.5 text-xs"><Type size={14} />Text</TabsTrigger>
-              <TabsTrigger value="template" className="gap-1.5 text-xs"><Palette size={14} />Style</TabsTrigger>
-              <TabsTrigger value="image" className="gap-1.5 text-xs"><ImageIcon size={14} />Image</TabsTrigger>
+              <TabsTrigger value="image" className="gap-1.5 text-xs"><ImageIcon size={14} />Custom</TabsTrigger>
             </TabsList>
 
             <div className="p-4 space-y-4 max-h-[60vh] overflow-y-auto">
+              {/* TEMPLATE TAB */}
+              <TabsContent value="template" className="mt-0 space-y-5">
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">Aspect Ratio</Label>
+                  <Select value={aspectRatio.label} onValueChange={(v) => setAspectRatio(ASPECT_RATIOS.find((a) => a.label === v) || ASPECT_RATIOS[0])}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {ASPECT_RATIOS.map((ar) => (
+                        <SelectItem key={ar.label} value={ar.label}>{ar.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {categories.map(cat => (
+                  <div key={cat} className="space-y-2">
+                    <Label className="text-xs text-muted-foreground uppercase tracking-wider">{cat}</Label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {TEMPLATES.filter(t => t.category === cat).map((t) => (
+                        <button
+                          key={t.id}
+                          onClick={() => {
+                            setSelectedTemplate(t);
+                            setCustomTextColor(null);
+                            setCustomAccentColor(null);
+                            setCustomBgImage(null);
+                          }}
+                          className={`relative rounded-lg overflow-hidden aspect-square border-2 transition-all group ${
+                            selectedTemplate.id === t.id
+                              ? 'border-primary ring-2 ring-primary/30 scale-[1.02]'
+                              : 'border-border hover:border-muted-foreground'
+                          }`}
+                        >
+                          {t.type === 'image' ? (
+                            <img src={t.bg} alt={t.name} className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
+                          ) : (
+                            <div className="absolute inset-0" style={{ background: t.bg }} />
+                          )}
+                          <div className="absolute inset-0 bg-black/40 group-hover:bg-black/30 transition-colors" />
+                          <span className="absolute inset-0 flex items-end p-1.5">
+                            <span className="text-[10px] font-semibold text-white leading-tight drop-shadow-lg">
+                              {t.name}
+                            </span>
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+
+                {/* Color overrides */}
+                <div className="grid grid-cols-2 gap-3 pt-2 border-t border-border">
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Text Color</Label>
+                    <div className="flex gap-2 items-center">
+                      <input type="color" value={effectiveTextColor} onChange={(e) => setCustomTextColor(e.target.value)} className="w-8 h-8 rounded cursor-pointer border border-border" />
+                      <span className="text-xs font-mono text-muted-foreground">{effectiveTextColor}</span>
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Accent Color</Label>
+                    <div className="flex gap-2 items-center">
+                      <input type="color" value={effectiveAccentColor} onChange={(e) => setCustomAccentColor(e.target.value)} className="w-8 h-8 rounded cursor-pointer border border-border" />
+                      <span className="text-xs font-mono text-muted-foreground">{effectiveAccentColor}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {selectedTemplate.type === 'image' && (
+                  <div className="space-y-2">
+                    <Label className="text-xs text-muted-foreground">Overlay Darkness: {Math.round(effectiveOverlay * 100)}%</Label>
+                    <Slider value={[effectiveOverlay]} onValueChange={([v]) => setOverlayOpacity(v)} min={0} max={0.85} step={0.05} />
+                  </div>
+                )}
+              </TabsContent>
+
               {/* TEXT TAB */}
               <TabsContent value="text" className="mt-0 space-y-4">
                 <div className="space-y-2">
@@ -334,7 +426,6 @@ export default function SharePage() {
                   <Label className="text-xs text-muted-foreground">Subtitle (optional)</Label>
                   <Input value={customSubtext} onChange={(e) => setCustomSubtext(e.target.value)} placeholder="Your message..." />
                 </div>
-
                 <div className="space-y-2">
                   <Label className="text-xs text-muted-foreground">Verse Font Size: {fontSize}px</Label>
                   <Slider value={[fontSize]} onValueChange={([v]) => setFontSize(v)} min={24} max={80} step={2} />
@@ -343,7 +434,6 @@ export default function SharePage() {
                   <Label className="text-xs text-muted-foreground">Reference Size: {refFontSize}px</Label>
                   <Slider value={[refFontSize]} onValueChange={([v]) => setRefFontSize(v)} min={14} max={40} step={1} />
                 </div>
-
                 <div className="space-y-2">
                   <Label className="text-xs text-muted-foreground">Text Alignment</Label>
                   <div className="flex gap-2">
@@ -356,76 +446,18 @@ export default function SharePage() {
                     ))}
                   </div>
                 </div>
-
                 <div className="space-y-2">
                   <Label className="text-xs text-muted-foreground">Watermark</Label>
                   <Input value={watermark} onChange={(e) => setWatermark(e.target.value)} placeholder="דרך Derekh" />
                 </div>
               </TabsContent>
 
-              {/* STYLE TAB */}
-              <TabsContent value="template" className="mt-0 space-y-4">
-                <div className="space-y-2">
-                  <Label className="text-xs text-muted-foreground">Aspect Ratio</Label>
-                  <Select value={aspectRatio.label} onValueChange={(v) => setAspectRatio(ASPECT_RATIOS.find((a) => a.label === v) || ASPECT_RATIOS[0])}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {ASPECT_RATIOS.map((ar) => (
-                        <SelectItem key={ar.label} value={ar.label}>{ar.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-xs text-muted-foreground">Templates</Label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {TEMPLATES.map((t) => (
-                      <button
-                        key={t.id}
-                        onClick={() => {
-                          setSelectedTemplate(t);
-                          setCustomTextColor(null);
-                          setCustomAccentColor(null);
-                          setCustomBgImage(null);
-                        }}
-                        className={`relative rounded-md overflow-hidden h-16 border-2 transition-all ${
-                          selectedTemplate.id === t.id ? 'border-primary ring-2 ring-primary/30' : 'border-border hover:border-muted-foreground'
-                        }`}
-                        style={{ background: t.bg }}
-                      >
-                        <span className="absolute inset-0 flex items-center justify-center text-[10px] font-medium px-1 text-center" style={{ color: t.textColor }}>
-                          {t.name}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <Label className="text-xs text-muted-foreground">Text Color</Label>
-                    <div className="flex gap-2 items-center">
-                      <input type="color" value={effectiveTextColor} onChange={(e) => setCustomTextColor(e.target.value)} className="w-8 h-8 rounded cursor-pointer border border-border" />
-                      <span className="text-xs font-mono text-muted-foreground">{effectiveTextColor}</span>
-                    </div>
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs text-muted-foreground">Accent Color</Label>
-                    <div className="flex gap-2 items-center">
-                      <input type="color" value={effectiveAccentColor} onChange={(e) => setCustomAccentColor(e.target.value)} className="w-8 h-8 rounded cursor-pointer border border-border" />
-                      <span className="text-xs font-mono text-muted-foreground">{effectiveAccentColor}</span>
-                    </div>
-                  </div>
-                </div>
-              </TabsContent>
-
-              {/* IMAGE TAB */}
+              {/* CUSTOM IMAGE TAB */}
               <TabsContent value="image" className="mt-0 space-y-4">
                 <div className="space-y-2">
-                  <Label className="text-xs text-muted-foreground">Custom Background Image</Label>
+                  <Label className="text-xs text-muted-foreground">Upload Your Own Background</Label>
                   <Button variant="outline" className="w-full gap-2" onClick={() => fileInputRef.current?.click()}>
-                    <ImageIcon size={14} /> Upload Background
+                    <ImageIcon size={14} /> Upload Image
                   </Button>
                   <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
                   {customBgImage && (
@@ -442,7 +474,7 @@ export default function SharePage() {
                 )}
                 <div className="p-3 bg-muted/50 rounded-md">
                   <p className="text-xs text-muted-foreground">
-                    💡 <strong>Tip:</strong> Upload a landscape photo, nature scene, or texture. The overlay control lets you darken it so text remains readable.
+                    💡 <strong>Tip:</strong> Upload landscape photos, ancient textures, or nature scenes. Use the overlay slider to darken for readability.
                   </p>
                 </div>
               </TabsContent>
