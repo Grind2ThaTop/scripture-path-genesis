@@ -655,26 +655,32 @@ export default function ShortsEngine() {
         updateTask(taskId, { progress: pct, message: msg });
       });
 
-      setRenderProgress({ pct: 100, message: "Download ready!" });
-      updateTask(taskId, { progress: 100, message: "Download ready!", status: "done" });
+      setRenderProgress({ pct: 100, message: "Video ready!" });
+      updateTask(taskId, { progress: 100, message: "Video ready! 🔥", status: "done" });
 
-      // Trigger download
+      // Store for in-app playback
+      if (renderedVideoUrl) URL.revokeObjectURL(renderedVideoUrl);
       const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${project.title || "truth-short"}.webm`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      setRenderedVideoUrl(url);
 
-      toast.success("Video downloaded!");
+      toast.success("Video rendered! Watch it below or download.");
     } catch (e: any) {
       toast.error(`Render failed: ${e.message}`);
       updateTask(taskId, { progress: 0, message: e.message, status: "error" });
     } finally {
       setRendering(false);
     }
+  };
+
+  const downloadVideo = () => {
+    if (!renderedVideoUrl) return;
+    const a = document.createElement("a");
+    a.href = renderedVideoUrl;
+    a.download = `${project.title || "truth-short"}.webm`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    toast.success("Video downloading!");
   };
 
   const totalDurationMs = project.scenes.reduce((sum, s) => sum + s.duration_ms, 0);
