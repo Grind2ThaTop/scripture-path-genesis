@@ -100,17 +100,26 @@ async function renderVideoToBlob(
   onProgress: (pct: number, msg: string) => void,
   musicUrl?: string | null,
 ): Promise<{ blob: Blob; mimeType: string; extension: "mp4" | "webm" }> {
-  const WIDTH = 1080;
-  const HEIGHT = 1920;
-  const FPS = 30;
+  const isMobileDevice = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+  const prefersMp4 = /iPhone|iPad|iPod|Safari/i.test(navigator.userAgent) && !/Chrome|CriOS|FxiOS|Edg/i.test(navigator.userAgent);
+  const WIDTH = isMobileDevice ? 720 : 1080;
+  const HEIGHT = isMobileDevice ? 1280 : 1920;
+  const FPS = isMobileDevice ? 24 : 30;
 
-  const recorderFormats = [
-    { mimeType: "video/mp4;codecs=h264,aac", extension: "mp4" as const },
-    { mimeType: "video/mp4", extension: "mp4" as const },
-    { mimeType: "video/webm;codecs=vp9,opus", extension: "webm" as const },
-    { mimeType: "video/webm;codecs=vp8,opus", extension: "webm" as const },
-    { mimeType: "video/webm", extension: "webm" as const },
-  ];
+  const recorderFormats = prefersMp4
+    ? [
+        { mimeType: "video/mp4;codecs=h264,aac", extension: "mp4" as const },
+        { mimeType: "video/mp4", extension: "mp4" as const },
+        { mimeType: "video/webm;codecs=vp8,opus", extension: "webm" as const },
+        { mimeType: "video/webm", extension: "webm" as const },
+      ]
+    : [
+        { mimeType: "video/webm;codecs=vp9,opus", extension: "webm" as const },
+        { mimeType: "video/webm;codecs=vp8,opus", extension: "webm" as const },
+        { mimeType: "video/webm", extension: "webm" as const },
+        { mimeType: "video/mp4;codecs=h264,aac", extension: "mp4" as const },
+        { mimeType: "video/mp4", extension: "mp4" as const },
+      ];
 
   const recorderFormat = recorderFormats.find(({ mimeType }) => MediaRecorder.isTypeSupported(mimeType));
   if (!recorderFormat) {
@@ -229,6 +238,9 @@ async function renderVideoToBlob(
 
   const videoStream = canvas.captureStream(FPS);
   const audioTracks = audioDestination.stream.getAudioTracks();
+  audioTracks.forEach((track) => {
+    track.enabled = true;
+  });
   const combinedStream = new MediaStream([...videoStream.getVideoTracks(), ...audioTracks]);
 
   const mediaRecorder = new MediaRecorder(combinedStream, {
@@ -243,14 +255,47 @@ async function renderVideoToBlob(
   };
 
   const recordingDone = new Promise<{ blob: Blob; mimeType: string; extension: "mp4" | "webm" }>((resolve, reject) => {
-    mediaRecorder.onerror = () => reject(new Error("Video recording failed."));
-    mediaRecorder.onstop = () => {
+    let settled = false;
+    let timeoutId: number | undefined;
+
+    const finalize = () => {
+      if (settled) return;
+      settled = true;
+      if (timeoutId) window.clearTimeout(timeoutId);
+
+      const actualMimeType = mediaRecorder.mimeType || chunks[0]?.type || recorderFormat.mimeType;
+      const extension = actualMimeType.includes("mp4") ? "mp4" : "webm";
+      const blob = new Blob(chunks, { type: actualMimeType });
+
+      if (blob.size === 0) {
+        reject(new Error("Video export produced no media data."));
+        return;
+      }
+
       resolve({
-        blob: new Blob(chunks, { type: recorderFormat.mimeType }),
-        mimeType: recorderFormat.mimeType,
-        extension: recorderFormat.extension,
+        blob,
+        mimeType: actualMimeType,
+        extension,
       });
     };
+
+    mediaRecorder.onerror = () => reject(new Error("Video recording failed."));
+    mediaRecorder.onstop = finalize;
+
+    timeoutId = window.setTimeout(() => {
+      try {
+        if (mediaRecorder.state !== "inactive") {
+          mediaRecorder.requestData();
+          mediaRecorder.stop();
+        }
+      } catch {
+        // no-op
+      }
+
+      window.setTimeout(() => {
+        if (!settled) finalize();
+      }, 1200);
+    }, Math.max(15000, Math.ceil(totalDurationSec * 1000) + 8000));
   });
 
   mediaRecorder.start(250);
@@ -258,6 +303,7 @@ async function renderVideoToBlob(
 
   const totalFrames = scenes.reduce((sum, s) => sum + Math.round((s.duration_ms / 1000) * FPS), 0);
   let globalFrame = 0;
+  let lastReportedProgress = -1;
 
   for (let si = 0; si < scenes.length; si++) {
     const scene = scenes[si];
@@ -439,7 +485,14 @@ async function renderVideoToBlob(
       await new Promise((resolve) => setTimeout(resolve, 1000 / FPS));
       globalFrame++;
       const pct = 15 + (globalFrame / totalFrames) * 80;
-      onProgress(pct, `Rendering scene ${si + 1}/${scenes.length}...`);
+      const roundedPct = Math.round(pct);
+      if (
+        roundedPct !== lastReportedProgress &&
+        (globalFrame % Math.max(1, Math.floor(FPS / 4)) === 0 || globalFrame === totalFrames)
+      ) {
+        lastReportedProgress = roundedPct;
+        onProgress(roundedPct, `Rendering scene ${si + 1}/${scenes.length}...`);
+      }
     }
   }
 
