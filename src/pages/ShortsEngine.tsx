@@ -195,8 +195,6 @@ async function renderVideoToBlob(
   onProgress(12, "Mixing audio...");
   const mixedBuffer = await offlineCtx.startRendering();
 
-  // Encode mixed audio as WAV
-  const wavBlob = audioBufferToWav(mixedBuffer);
 
   onProgress(15, "Setting up video encoder...");
 
