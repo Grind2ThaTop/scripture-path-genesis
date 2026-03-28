@@ -829,6 +829,7 @@ export default function ShortsEngine() {
                 }}>
                   <Plus className="w-4 h-4 mr-1" /> Add Scene
                 </Button>
+                </div>
               </div>
 
               <div className="space-y-3">
