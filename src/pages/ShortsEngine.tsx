@@ -1811,9 +1811,12 @@ export default function ShortsEngine() {
                         <p className="text-xs text-muted-foreground mt-1">{p.topic} · {p.duration}s · {p.style}</p>
                         <p className="text-xs text-muted-foreground">{p.verse_reference}</p>
                       </div>
-                      <Badge variant={p.status === "draft" ? "secondary" : "default"} className="text-xs">
-                        {p.status}
-                      </Badge>
+                      <div className="flex items-center gap-1.5">
+                        <Badge variant={p.status === "rendered" ? "default" : p.status === "draft" ? "secondary" : "outline"} className="text-xs">
+                          {p.status === "rendered" ? "✅ Video Ready" : p.status}
+                        </Badge>
+                        {p.final_video_url && <Video className="w-3.5 h-3.5 text-primary" />}
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
