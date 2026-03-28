@@ -77,6 +77,7 @@ const App = () => (
               <Route path="/onboarding" element={<OnboardingPage />} />
               <Route path="/library" element={<LibraryPage />} />
               <Route path="/members" element={<MembersPage />} />
+              <Route path="/discernment" element={<DiscernmentPage />} />
               <Route path="/life-situations" element={<LifeSituations />} />
               <Route path="/progress" element={<Progress />} />
               <Route path="*" element={<NotFound />} />
