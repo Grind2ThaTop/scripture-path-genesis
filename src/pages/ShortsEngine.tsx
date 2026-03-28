@@ -543,13 +543,20 @@ export default function ShortsEngine() {
     if (data) setSavedProjects(data);
   };
 
+  const enforceBlackRepresentation = (prompt: string): string => {
+    const hasBlack = /black\s*(man|woman|men|women|people|family|person|couple|youth|teen|kid|child)/i.test(prompt);
+    if (hasBlack) return prompt;
+    return `${prompt}. IMPORTANT: All people in this image MUST be Black/African-American. Feature Black men, Black women, or Black families. Urban, modern, relatable setting. No generic stock photos.`;
+  };
+
   const generateSceneImage = async (sceneIndex: number) => {
     const scene = project.scenes[sceneIndex];
     if (!scene.image_prompt) { toast.error("Add an image prompt first"); return; }
     setGeneratingImage(sceneIndex);
     try {
+      const enhancedPrompt = enforceBlackRepresentation(scene.image_prompt);
       const { data, error } = await supabase.functions.invoke("shorts-media", {
-        body: { action: "generate_image", prompt: scene.image_prompt },
+        body: { action: "generate_image", prompt: enhancedPrompt },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
