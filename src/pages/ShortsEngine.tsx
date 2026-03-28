@@ -98,6 +98,8 @@ export default function ShortsEngine() {
   });
   const [savedProjects, setSavedProjects] = useState<any[]>([]);
   const [expandedScene, setExpandedScene] = useState<number | null>(null);
+  const [generatingImage, setGeneratingImage] = useState<number | null>(null);
+  const [playingAudio, setPlayingAudio] = useState<number | null>(null);
 
   useEffect(() => {
     if (user) loadProjects();
