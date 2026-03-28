@@ -31,6 +31,10 @@ import TopicEngine from "./pages/TopicEngine";
 import LeaderboardPage from "./pages/LeaderboardPage";
 import ChurchPage from "./pages/ChurchPage";
 import AdminPage from "./pages/AdminPage";
+import CalendarPage from "./pages/CalendarPage";
+import OnboardingPage from "./pages/OnboardingPage";
+import LibraryPage from "./pages/LibraryPage";
+import MembersPage from "./pages/MembersPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -68,6 +72,10 @@ const App = () => (
               <Route path="/leaderboard" element={<LeaderboardPage />} />
               <Route path="/church" element={<ChurchPage />} />
               <Route path="/admin" element={<AdminPage />} />
+              <Route path="/calendar" element={<CalendarPage />} />
+              <Route path="/onboarding" element={<OnboardingPage />} />
+              <Route path="/library" element={<LibraryPage />} />
+              <Route path="/members" element={<MembersPage />} />
               <Route path="/life-situations" element={<LifeSituations />} />
               <Route path="/progress" element={<Progress />} />
               <Route path="*" element={<NotFound />} />

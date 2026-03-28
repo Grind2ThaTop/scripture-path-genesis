@@ -14,7 +14,7 @@ import {
 const LEVELS = [
   {
     level: 1,
-    name: 'Milk',
+    name: 'Seeker',
     icon: Baby,
     color: 'text-blue-400',
     bgColor: 'bg-blue-400/10',
@@ -26,7 +26,7 @@ const LEVELS = [
   },
   {
     level: 2,
-    name: 'Understanding',
+    name: 'Learner',
     icon: Star,
     color: 'text-emerald-400',
     bgColor: 'bg-emerald-400/10',
@@ -38,7 +38,7 @@ const LEVELS = [
   },
   {
     level: 3,
-    name: 'Application',
+    name: 'Rooted',
     icon: Sword,
     color: 'text-amber-400',
     bgColor: 'bg-amber-400/10',
@@ -50,7 +50,7 @@ const LEVELS = [
   },
   {
     level: 4,
-    name: 'Discipline',
+    name: 'Disciplined',
     icon: Shield,
     color: 'text-orange-400',
     bgColor: 'bg-orange-400/10',
@@ -62,7 +62,7 @@ const LEVELS = [
   },
   {
     level: 5,
-    name: 'Teacher',
+    name: 'Builder',
     icon: Crown,
     color: 'text-primary',
     bgColor: 'bg-primary/10',
