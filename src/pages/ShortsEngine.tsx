@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useBackgroundTasks } from "@/hooks/useBackgroundTasks";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -287,6 +288,7 @@ async function renderVideoToBlob(
 
 export default function ShortsEngine() {
   const { user } = useAuth();
+  const { addTask, updateTask } = useBackgroundTasks();
   const [activeTab, setActiveTab] = useState("create");
   const [generating, setGenerating] = useState(false);
   const [project, setProject] = useState<ShortProject>({
@@ -508,16 +510,22 @@ export default function ShortsEngine() {
       toast.info("All scenes already have images or need prompts");
       return;
     }
+    const taskId = `batch-images-${Date.now()}`;
     setBatchGenerating(true);
     setBatchProgress({ current: 0, total: project.scenes.length, message: "Starting..." });
+    addTask({ id: taskId, label: `Generating ${project.scenes.length} scene images`, module: "Shorts", progress: 0, message: "Starting...", status: "running" });
 
     for (let i = 0; i < project.scenes.length; i++) {
       const scene = project.scenes[i];
       if (!scene.image_prompt || scene.generated_image_url) {
+        const pct = ((i + 1) / project.scenes.length) * 100;
         setBatchProgress(p => ({ ...p, current: i + 1, message: `Scene ${i + 1} skipped` }));
+        updateTask(taskId, { progress: pct, message: `Scene ${i + 1} skipped` });
         continue;
       }
+      const pct = ((i + 0.5) / project.scenes.length) * 100;
       setBatchProgress({ current: i + 1, total: project.scenes.length, message: `Generating scene ${i + 1}...` });
+      updateTask(taskId, { progress: pct, message: `Generating scene ${i + 1}/${project.scenes.length}...` });
       try {
         const { data, error } = await supabase.functions.invoke("shorts-media", {
           body: { action: "generate_image", prompt: scene.image_prompt },
@@ -529,8 +537,10 @@ export default function ShortsEngine() {
       } catch (e: any) {
         toast.error(`Scene ${i + 1} failed: ${e.message}`);
       }
+      updateTask(taskId, { progress: ((i + 1) / project.scenes.length) * 100 });
     }
     setBatchGenerating(false);
+    updateTask(taskId, { progress: 100, message: "All images generated!", status: "done" });
     toast.success("All images generated!");
   };
 
@@ -540,15 +550,19 @@ export default function ShortsEngine() {
       toast.error("No scenes to render");
       return;
     }
+    const taskId = `render-video-${Date.now()}`;
     setRendering(true);
     setRenderProgress({ pct: 0, message: "Preparing..." });
+    addTask({ id: taskId, label: `Rendering "${project.title || "Truth Short"}"`, module: "Shorts", progress: 0, message: "Preparing...", status: "running" });
 
     try {
       const blob = await renderVideoToBlob(project.scenes, (pct, msg) => {
         setRenderProgress({ pct, message: msg });
+        updateTask(taskId, { progress: pct, message: msg });
       });
 
       setRenderProgress({ pct: 100, message: "Download ready!" });
+      updateTask(taskId, { progress: 100, message: "Download ready!", status: "done" });
 
       // Trigger download
       const url = URL.createObjectURL(blob);
@@ -563,6 +577,7 @@ export default function ShortsEngine() {
       toast.success("Video downloaded!");
     } catch (e: any) {
       toast.error(`Render failed: ${e.message}`);
+      updateTask(taskId, { progress: 0, message: e.message, status: "error" });
     } finally {
       setRendering(false);
     }
