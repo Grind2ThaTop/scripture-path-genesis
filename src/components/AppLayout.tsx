@@ -39,6 +39,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
   const { user, signOut, loading: authLoading } = useAuth();
+  const { isAdmin } = useIsAdmin();
 
   return (
     <div className="min-h-screen flex bg-background">
