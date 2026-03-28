@@ -221,7 +221,7 @@ export const VIRAL_KEYWORDS: ViralKeyword[] = [
     hook: "Revelation 1:14-15 describes Yahshua and it doesn't sound European",
     angle: "Hair like wool, feet like burned brass. Song of Solomon 1:5. Daniel 7:9.",
     scriptures: ["Revelation 1:14-15", "Song of Solomon 1:5", "Daniel 7:9"],
-    tags: ["black jesus", "real image", "biblical appearance"],
+    tags: ["real image of yahshua", "biblical appearance", "truth"],
     audience_trigger: "racial truth",
     shorts_ready: true,
   },
