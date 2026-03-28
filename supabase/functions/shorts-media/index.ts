@@ -44,7 +44,7 @@ serve(async (req) => {
           body: JSON.stringify({
             model: "flux-pro",
             prompt: prompt,
-            image_size: { width: 1080, height: 1920 },
+            image_size: "portrait_16_9",
             num_images: 1,
           }),
         });
