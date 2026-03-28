@@ -852,7 +852,7 @@ export default function ShortsEngine() {
       const blob = await renderVideoToBlob(project.scenes, (pct, msg) => {
         setRenderProgress({ pct, message: msg });
         updateTask(taskId, { progress: pct, message: msg });
-      });
+      }, musicUrl);
 
       setRenderProgress({ pct: 100, message: "Video ready!" });
       updateTask(taskId, { progress: 100, message: "Video ready! 🔥", status: "done" });
