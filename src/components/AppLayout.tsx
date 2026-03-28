@@ -1,15 +1,20 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '@/hooks/useAuth';
 import {
   BookOpen, GraduationCap, Languages, BarChart3,
-  ChevronLeft, ChevronRight, Menu, X, Home, Compass, Book, Highlighter
+  ChevronLeft, ChevronRight, Menu, X, Home, Compass, Book, Highlighter,
+  Search, StickyNote, Flame, LogIn, LogOut, User
 } from 'lucide-react';
 
 const navItems = [
   { path: '/', label: 'Dashboard', icon: Home },
   { path: '/bible', label: 'Bible (KJV)', icon: Book },
+  { path: '/search', label: 'Search', icon: Search },
   { path: '/highlights', label: 'Highlights', icon: Highlighter },
+  { path: '/notes', label: 'Notes & Bookmarks', icon: StickyNote },
+  { path: '/reading-plans', label: 'Reading Plans', icon: Flame },
   { path: '/study-guide', label: 'Study Guide', icon: BookOpen },
   { path: '/hebrew', label: 'Hebrew', icon: Languages },
   { path: '/greek', label: 'Greek', icon: GraduationCap },
