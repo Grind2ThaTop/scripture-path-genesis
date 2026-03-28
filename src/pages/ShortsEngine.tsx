@@ -1796,7 +1796,13 @@ export default function ShortsEngine() {
                     .eq("project_id", p.id)
                     .order("scene_order");
                   setProject({ ...p, scenes: scenes || [] });
-                  setActiveTab("scenes");
+                  // Restore saved video URL
+                  if (p.final_video_url) {
+                    setRenderedVideoUrl(p.final_video_url);
+                    setActiveTab("export");
+                  } else {
+                    setActiveTab("scenes");
+                  }
                 }}>
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between">
