@@ -99,10 +99,23 @@ async function renderVideoToBlob(
   scenes: Scene[],
   onProgress: (pct: number, msg: string) => void,
   musicUrl?: string | null,
-): Promise<Blob> {
+): Promise<{ blob: Blob; mimeType: string; extension: "mp4" | "webm" }> {
   const WIDTH = 1080;
   const HEIGHT = 1920;
   const FPS = 30;
+
+  const recorderFormats = [
+    { mimeType: "video/mp4;codecs=h264,aac", extension: "mp4" as const },
+    { mimeType: "video/mp4", extension: "mp4" as const },
+    { mimeType: "video/webm;codecs=vp9,opus", extension: "webm" as const },
+    { mimeType: "video/webm;codecs=vp8,opus", extension: "webm" as const },
+    { mimeType: "video/webm", extension: "webm" as const },
+  ];
+
+  const recorderFormat = recorderFormats.find(({ mimeType }) => MediaRecorder.isTypeSupported(mimeType));
+  if (!recorderFormat) {
+    throw new Error("This browser can't export video on this device yet.");
+  }
 
   const canvas = document.createElement("canvas");
   canvas.width = WIDTH;
@@ -144,9 +157,11 @@ async function renderVideoToBlob(
         const binary = atob(scene.audio_base64);
         const bytes = new Uint8Array(binary.length);
         for (let j = 0; j < binary.length; j++) bytes[j] = binary.charCodeAt(j);
-        const buffer = await audioCtx.decodeAudioData(bytes.buffer);
-        narrationBuffers.push(buffer);
-      } catch { narrationBuffers.push(null); }
+        const decoded = await audioCtx.decodeAudioData(bytes.buffer.slice(0));
+        narrationBuffers.push(decoded);
+      } catch {
+        narrationBuffers.push(null);
+      }
     } else {
       narrationBuffers.push(null);
     }
@@ -158,36 +173,36 @@ async function renderVideoToBlob(
     try {
       const resp = await fetch(musicUrl);
       const arrBuf = await resp.arrayBuffer();
-      musicBuffer = await audioCtx.decodeAudioData(arrBuf);
-    } catch (e) { console.warn("Failed to load music:", e); }
+      musicBuffer = await audioCtx.decodeAudioData(arrBuf.slice(0));
+    } catch (e) {
+      console.warn("Failed to load music:", e);
+    }
   }
 
   // Mix all audio into a single offline buffer
   const offlineCtx = new OfflineAudioContext(2, Math.ceil(totalDurationSec * 44100), 44100);
 
-  // Add music (looped if shorter than total, reduced volume)
   if (musicBuffer) {
     const musicSrc = offlineCtx.createBufferSource();
     musicSrc.buffer = musicBuffer;
     musicSrc.loop = true;
     const gainNode = offlineCtx.createGain();
-    gainNode.gain.value = 0.25; // Background level
+    gainNode.gain.value = 0.22;
     musicSrc.connect(gainNode);
     gainNode.connect(offlineCtx.destination);
     musicSrc.start(0);
   }
 
-  // Add narrations at correct time offsets
   let timeOffset = 0;
   for (let i = 0; i < scenes.length; i++) {
     if (narrationBuffers[i]) {
       const src = offlineCtx.createBufferSource();
       src.buffer = narrationBuffers[i]!;
       const gain = offlineCtx.createGain();
-      gain.gain.value = 1.0;
+      gain.gain.value = 1.15;
       src.connect(gain);
       gain.connect(offlineCtx.destination);
-      src.start(timeOffset + 0.3); // Small delay for scene transition
+      src.start(timeOffset + 0.2);
     }
     timeOffset += scenes[i].duration_ms / 1000;
   }
@@ -195,33 +210,31 @@ async function renderVideoToBlob(
   onProgress(12, "Mixing audio...");
   const mixedBuffer = await offlineCtx.startRendering();
 
-
   onProgress(15, "Setting up video encoder...");
 
-  // Use Web Audio API to play mixed audio into a MediaStream destination
   const liveAudioCtx = new AudioContext({ sampleRate: 44100 });
+  if (liveAudioCtx.state === "suspended") {
+    await liveAudioCtx.resume();
+  }
+
   const audioDestination = liveAudioCtx.createMediaStreamDestination();
-  
-  // Create a buffer source from our mixed audio and connect to destination
+  const liveGain = liveAudioCtx.createGain();
+  liveGain.gain.value = 1;
+
   const liveSource = liveAudioCtx.createBufferSource();
   liveSource.buffer = mixedBuffer;
-  liveSource.connect(audioDestination);
-  liveSource.connect(liveAudioCtx.destination); // Also play through speakers for preview
+  liveSource.connect(liveGain);
+  liveGain.connect(audioDestination);
+  liveGain.connect(liveAudioCtx.destination);
 
   const videoStream = canvas.captureStream(FPS);
-
-  // Combine video + audio streams
-  const combinedTracks = [...videoStream.getTracks(), ...audioDestination.stream.getAudioTracks()];
-  const combinedStream = new MediaStream(combinedTracks);
+  const audioTracks = audioDestination.stream.getAudioTracks();
+  const combinedStream = new MediaStream([...videoStream.getVideoTracks(), ...audioTracks]);
 
   const mediaRecorder = new MediaRecorder(combinedStream, {
-    mimeType: MediaRecorder.isTypeSupported("video/webm;codecs=vp9,opus")
-      ? "video/webm;codecs=vp9,opus"
-      : MediaRecorder.isTypeSupported("video/webm;codecs=vp8,opus")
-        ? "video/webm;codecs=vp8,opus"
-        : "video/webm",
+    mimeType: recorderFormat.mimeType,
     videoBitsPerSecond: 8_000_000,
-    audioBitsPerSecond: 128_000,
+    audioBitsPerSecond: 192_000,
   });
 
   const chunks: Blob[] = [];
@@ -229,16 +242,20 @@ async function renderVideoToBlob(
     if (e.data.size > 0) chunks.push(e.data);
   };
 
-  const recordingDone = new Promise<Blob>((resolve) => {
+  const recordingDone = new Promise<{ blob: Blob; mimeType: string; extension: "mp4" | "webm" }>((resolve, reject) => {
+    mediaRecorder.onerror = () => reject(new Error("Video recording failed."));
     mediaRecorder.onstop = () => {
-      resolve(new Blob(chunks, { type: "video/webm" }));
+      resolve({
+        blob: new Blob(chunks, { type: recorderFormat.mimeType }),
+        mimeType: recorderFormat.mimeType,
+        extension: recorderFormat.extension,
+      });
     };
   });
 
-  mediaRecorder.start();
-  liveSource.start(0);
+  mediaRecorder.start(250);
+  liveSource.start(liveAudioCtx.currentTime + 0.05);
 
-  // Render each scene frame by frame
   const totalFrames = scenes.reduce((sum, s) => sum + Math.round((s.duration_ms / 1000) * FPS), 0);
   let globalFrame = 0;
 
@@ -247,18 +264,15 @@ async function renderVideoToBlob(
     const sceneFrames = Math.round((scene.duration_ms / 1000) * FPS);
     const img = images[si];
 
-    // Hormozi caption: split into words, highlight word by word
     const words = (scene.caption_text || "").split(/\s+/).filter(Boolean);
     const wordsPerFrame = words.length > 0 ? sceneFrames / words.length : 1;
 
     for (let f = 0; f < sceneFrames; f++) {
       const progress = f / sceneFrames;
 
-      // Background
       ctx.fillStyle = "#0a0a0a";
       ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
-      // Draw image with motion effect
       if (img) {
         ctx.save();
         const motion = scene.motion_type || "ken-burns";
@@ -303,7 +317,6 @@ async function renderVideoToBlob(
         ctx.fillRect(0, 0, WIDTH, HEIGHT);
       }
 
-      // Darker overlay at bottom for caption area
       const overlayGrad = ctx.createLinearGradient(0, HEIGHT * 0.55, 0, HEIGHT);
       overlayGrad.addColorStop(0, "rgba(0,0,0,0)");
       overlayGrad.addColorStop(0.3, "rgba(0,0,0,0.6)");
@@ -311,14 +324,12 @@ async function renderVideoToBlob(
       ctx.fillStyle = overlayGrad;
       ctx.fillRect(0, HEIGHT * 0.55, WIDTH, HEIGHT * 0.45);
 
-      // === HORMOZI CAPTIONS ===
       if (words.length > 0) {
         const activeWordIndex = Math.min(Math.floor(f / wordsPerFrame), words.length - 1);
         const captionY = HEIGHT * 0.72;
         const fontSize = 88;
         const lineHeight = 110;
 
-        // Build lines with word wrapping
         ctx.font = `900 ${fontSize}px "Arial Black", "Impact", sans-serif`;
         const captionLines: { word: string; wordIdx: number }[][] = [];
         let currentLine: { word: string; wordIdx: number }[] = [];
@@ -337,10 +348,9 @@ async function renderVideoToBlob(
         });
         if (currentLine.length > 0) captionLines.push(currentLine);
 
-        // Only show 2-3 lines centered around active word
         let activeLineIdx = 0;
         for (let li = 0; li < captionLines.length; li++) {
-          if (captionLines[li].some(w => w.wordIdx === activeWordIndex)) {
+          if (captionLines[li].some((w) => w.wordIdx === activeWordIndex)) {
             activeLineIdx = li;
             break;
           }
@@ -353,10 +363,9 @@ async function renderVideoToBlob(
         const startYPos = captionY - totalHeight / 2;
 
         visibleLines.forEach((line, li) => {
-          let xPos = WIDTH / 2;
-          const lineText = line.map(w => w.word).join(" ");
+          const lineText = line.map((w) => w.word).join(" ");
           const fullWidth = ctx.measureText(lineText).width;
-          let drawX = xPos - fullWidth / 2;
+          let drawX = WIDTH / 2 - fullWidth / 2;
 
           line.forEach(({ word, wordIdx }) => {
             const wWidth = ctx.measureText(word).width;
@@ -368,7 +377,6 @@ async function renderVideoToBlob(
             ctx.textBaseline = "middle";
 
             if (isActive) {
-              // Active word: yellow highlight box + white bold text + scale pop
               const pad = 12;
               const boxScale = 1.05 + Math.sin(f * 0.3) * 0.02;
               ctx.save();
@@ -378,7 +386,6 @@ async function renderVideoToBlob(
               ctx.scale(boxScale, boxScale);
               ctx.translate(-wordCenterX, -wordCenterY);
 
-              // Yellow highlight background
               ctx.fillStyle = "#FFD700";
               const radius = 10;
               const bx = drawX - pad;
@@ -398,13 +405,11 @@ async function renderVideoToBlob(
               ctx.closePath();
               ctx.fill();
 
-              // Black text on yellow
               ctx.fillStyle = "#000000";
               ctx.font = `900 ${fontSize}px "Arial Black", "Impact", sans-serif`;
               ctx.fillText(word, drawX, startYPos + li * lineHeight);
               ctx.restore();
             } else {
-              // Non-active words: white with shadow
               ctx.shadowColor = "rgba(0,0,0,0.9)";
               ctx.shadowBlur = 15;
               ctx.shadowOffsetY = 4;
@@ -419,7 +424,6 @@ async function renderVideoToBlob(
         });
       }
 
-      // Verse reference - subtle, bottom
       if (scene.verse_reference) {
         ctx.save();
         ctx.textAlign = "center";
@@ -440,12 +444,25 @@ async function renderVideoToBlob(
   }
 
   onProgress(95, "Finalizing video...");
-  liveSource.stop();
-  mediaRecorder.stop();
-  liveAudioCtx.close();
-  audioCtx.close();
+  await new Promise((resolve) => setTimeout(resolve, 350));
+  if (mediaRecorder.state !== "inactive") {
+    mediaRecorder.requestData();
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    mediaRecorder.stop();
+  }
 
-  return recordingDone;
+  const result = await recordingDone;
+
+  try {
+    liveSource.stop();
+  } catch {
+    // no-op
+  }
+  videoStream.getTracks().forEach((track) => track.stop());
+  audioDestination.stream.getTracks().forEach((track) => track.stop());
+  await Promise.allSettled([liveAudioCtx.close(), audioCtx.close()]);
+
+  return result;
 }
 
 // Convert AudioBuffer to WAV Blob
@@ -522,6 +539,8 @@ export default function ShortsEngine() {
   const [rendering, setRendering] = useState(false);
   const [renderProgress, setRenderProgress] = useState({ pct: 0, message: "" });
   const [renderedVideoUrl, setRenderedVideoUrl] = useState<string | null>(null);
+  const renderedVideoBlobRef = useRef<Blob | null>(null);
+  const renderedVideoExtRef = useRef<"mp4" | "webm">("webm");
   const [previewPlaying, setPreviewPlaying] = useState(false);
   const [musicUrl, setMusicUrl] = useState<string | null>(null);
   const [generatingMusic, setGeneratingMusic] = useState(false);
@@ -575,23 +594,71 @@ export default function ShortsEngine() {
     }
   };
 
+  const generateSceneVoiceAudio = async (scene: Scene) => {
+    const narration = scene.narration_text?.trim();
+    if (!narration) return null;
+
+    const { data, error } = await supabase.functions.invoke("shorts-media", {
+      body: { action: "generate_tts", text: narration, voice: project.voice_preset || "onyx" },
+    });
+
+    if (error) throw error;
+    if (data?.error) throw new Error(data.error);
+    if (!data?.audio_base64) throw new Error("No narration audio returned");
+
+    return data.audio_base64 as string;
+  };
+
+  const ensureSceneAudio = async (scenes: Scene[], taskId?: string) => {
+    const narratedSceneCount = scenes.filter((scene) => scene.narration_text?.trim()).length;
+    if (narratedSceneCount === 0) return scenes;
+
+    const nextScenes = [...scenes];
+    let completed = 0;
+
+    for (let i = 0; i < nextScenes.length; i++) {
+      const scene = nextScenes[i];
+      if (!scene.narration_text?.trim()) continue;
+
+      if (!scene.audio_base64) {
+        const audio_base64 = await generateSceneVoiceAudio(scene);
+        if (audio_base64) {
+          nextScenes[i] = { ...scene, audio_base64 };
+          setProject((current) => ({
+            ...current,
+            scenes: current.scenes.map((existing, index) =>
+              index === i ? { ...existing, audio_base64 } : existing,
+            ),
+          }));
+        }
+      }
+
+      completed += 1;
+      if (taskId) {
+        const progress = Math.round(5 + (completed / narratedSceneCount) * 15);
+        const message = narratedSceneCount === 1
+          ? "Narration locked in..."
+          : `Building narration ${completed}/${narratedSceneCount}...`;
+        setRenderProgress({ pct: progress, message });
+        updateTask(taskId, { progress, message });
+      }
+    }
+
+    return nextScenes;
+  };
+
   const previewVoice = async (sceneIndex: number) => {
     const scene = project.scenes[sceneIndex];
     if (!scene.narration_text) { toast.error("Add narration text first"); return; }
     setPlayingAudio(sceneIndex);
     try {
-      const { data, error } = await supabase.functions.invoke("shorts-media", {
-        body: { action: "generate_tts", text: scene.narration_text, voice: project.voice_preset || "onyx" },
-      });
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-      if (data?.audio_base64) {
-        // Store audio on scene for video rendering
-        updateScene(sceneIndex, { audio_base64: data.audio_base64 } as any);
-        const audio = new Audio(`data:audio/mpeg;base64,${data.audio_base64}`);
-        audio.onended = () => setPlayingAudio(null);
-        await audio.play();
-      }
+      const audioBase64 = await generateSceneVoiceAudio(scene);
+      if (!audioBase64) throw new Error("No narration audio returned");
+
+      updateScene(sceneIndex, { audio_base64: audioBase64 } as any);
+      const audio = new Audio(`data:audio/mpeg;base64,${audioBase64}`);
+      audio.onended = () => setPlayingAudio(null);
+      await audio.play();
     } catch (e: any) {
       toast.error(e.message || "Failed to generate voice");
       setPlayingAudio(null);
@@ -848,57 +915,62 @@ export default function ShortsEngine() {
 
   // Render and download video
   const renderAndDownload = async () => {
+    if (!user) return;
     if (project.scenes.length === 0) {
       toast.error("No scenes to render");
       return;
     }
+
     const taskId = `render-video-${Date.now()}`;
     setRendering(true);
     setRenderProgress({ pct: 0, message: "Preparing..." });
     addTask({ id: taskId, label: `Rendering "${project.title || "Truth Short"}"`, module: "Shorts", progress: 0, message: "Preparing...", status: "running" });
 
     try {
-      const blob = await renderVideoToBlob(project.scenes, (pct, msg) => {
-        const adjustedPct = Math.round(pct * 0.8); // 0-80% for rendering
+      const scenesWithAudio = await ensureSceneAudio(project.scenes, taskId);
+      const rendered = await renderVideoToBlob(scenesWithAudio, (pct, msg) => {
+        const adjustedPct = Math.max(20, Math.round(pct * 0.8));
         setRenderProgress({ pct: adjustedPct, message: msg });
         updateTask(taskId, { progress: adjustedPct, message: msg });
       }, musicUrl);
 
-      // Upload to storage
       setRenderProgress({ pct: 85, message: "Uploading video..." });
       updateTask(taskId, { progress: 85, message: "Uploading video..." });
 
-      const fileName = `${user!.id}/${project.id || Date.now()}_${Date.now()}.webm`;
-      const { data: uploadData, error: uploadError } = await supabase.storage
+      const fileName = `${user.id}/${project.id || Date.now()}_${Date.now()}.${rendered.extension}`;
+      const { error: uploadError } = await supabase.storage
         .from("shorts-videos")
-        .upload(fileName, blob, { contentType: "video/webm", upsert: true });
+        .upload(fileName, rendered.blob, { contentType: rendered.mimeType, upsert: true });
 
       let publicUrl: string | null = null;
       if (uploadError) {
         console.error("Upload error:", uploadError);
-        toast.error("Video rendered but upload failed. You can still download it.");
+        toast.error("Video rendered but upload failed. You can still save it below.");
       } else {
         const { data: urlData } = supabase.storage.from("shorts-videos").getPublicUrl(fileName);
         publicUrl = urlData?.publicUrl || null;
 
-        // Save URL to project
         if (project.id && publicUrl) {
           await supabase.from("shorts_projects")
             .update({ final_video_url: publicUrl, status: "rendered" })
             .eq("id", project.id);
-          setProject(p => ({ ...p, final_video_url: publicUrl, status: "rendered" }));
+          setProject((current) => ({ ...current, final_video_url: publicUrl, status: "rendered" }));
         }
       }
 
       setRenderProgress({ pct: 100, message: "Video ready!" });
       updateTask(taskId, { progress: 100, message: "Video ready! 🔥", status: "done" });
 
-      // Store for in-app playback
-      if (renderedVideoUrl) URL.revokeObjectURL(renderedVideoUrl);
-      const localUrl = URL.createObjectURL(blob);
-      setRenderedVideoUrl(publicUrl || localUrl);
+      if (renderedVideoUrl?.startsWith("blob:")) {
+        URL.revokeObjectURL(renderedVideoUrl);
+      }
+      const localUrl = URL.createObjectURL(rendered.blob);
+      renderedVideoBlobRef.current = rendered.blob;
+      renderedVideoExtRef.current = rendered.extension;
+      setRenderedVideoUrl(localUrl);
+      setActiveTab("export");
 
-      toast.success("Video rendered & saved! 🔥");
+      toast.success("Video rendered with audio. Save it below. 🔥");
       loadProjects();
     } catch (e: any) {
       toast.error(`Render failed: ${e.message}`);
@@ -911,32 +983,45 @@ export default function ShortsEngine() {
   const downloadVideo = async () => {
     if (!renderedVideoUrl) return;
     try {
-      const response = await fetch(renderedVideoUrl);
-      const blob = await response.blob();
-      const fileName = `${project.title || "truth-short"}_${Date.now()}.webm`;
+      const blob = renderedVideoBlobRef.current ?? await fetch(renderedVideoUrl).then((response) => {
+        if (!response.ok) throw new Error(`Failed to fetch video: ${response.status}`);
+        return response.blob();
+      });
 
-      // Use native share/save on mobile if available (saves to camera roll)
-      if (navigator.share && /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)) {
-        const file = new File([blob], fileName, { type: "video/webm" });
-        try {
+      const extension = renderedVideoExtRef.current || (renderedVideoUrl.toLowerCase().includes(".mp4") ? "mp4" : "webm");
+      const mimeType = blob.type || (extension === "mp4" ? "video/mp4" : "video/webm");
+      const safeTitle = (project.title || "truth-short").trim().replace(/[^a-z0-9]+/gi, "-").replace(/^-+|-+$/g, "").toLowerCase() || "truth-short";
+      const fileName = `${safeTitle}_${Date.now()}.${extension}`;
+      const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+
+      if (isMobile && navigator.share) {
+        const file = new File([blob], fileName, { type: mimeType });
+        const canShareFiles = typeof navigator.canShare !== "function" || navigator.canShare({ files: [file] });
+
+        if (canShareFiles) {
           await navigator.share({ files: [file], title: project.title || "Truth Short" });
-          toast.success("Video shared/saved! 🔥");
+          toast.success("Use your phone’s save/share sheet to keep the video.");
           return;
-        } catch (shareErr) {
-          // User cancelled or share failed, fall through to download
         }
       }
 
-      // Fallback: trigger download
       const url = URL.createObjectURL(blob);
+      if (isMobile) {
+        window.open(url, "_blank", "noopener,noreferrer");
+        toast.success("Opened the video. Use your browser’s share/save option to keep it.");
+        setTimeout(() => URL.revokeObjectURL(url), 30000);
+        return;
+      }
+
       const a = document.createElement("a");
       a.href = url;
       a.download = fileName;
+      a.rel = "noopener";
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      toast.success("Video downloading to your device! 📲");
+      setTimeout(() => URL.revokeObjectURL(url), 30000);
+      toast.success("Video download started. 📲");
     } catch (e: any) {
       toast.error("Download failed: " + (e.message || "Unknown error"));
     }
@@ -1770,10 +1855,17 @@ export default function ShortsEngine() {
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold">Saved Projects</h2>
             <Button size="sm" onClick={() => {
+              if (renderedVideoUrl?.startsWith("blob:")) {
+                URL.revokeObjectURL(renderedVideoUrl);
+              }
+              renderedVideoBlobRef.current = null;
+              renderedVideoExtRef.current = "webm";
+              setRenderedVideoUrl(null);
+              setMusicUrl(null);
               setProject({
                 title: "", topic: "", verse_reference: "", verse_text: "",
                 duration: 30, style: "urban-prophetic", tone: "urgent",
-                voice_preset: "truth-narrator", cta: "Follow for truth",
+                voice_preset: "onyx", cta: "Follow for truth",
                 status: "draft", scenes: [],
               });
               setActiveTab("create");
@@ -1796,12 +1888,19 @@ export default function ShortsEngine() {
                     .select("*")
                     .eq("project_id", p.id)
                     .order("scene_order");
+
+                  if (renderedVideoUrl?.startsWith("blob:")) {
+                    URL.revokeObjectURL(renderedVideoUrl);
+                  }
+                  renderedVideoBlobRef.current = null;
+                  renderedVideoExtRef.current = p.final_video_url?.toLowerCase().includes(".mp4") ? "mp4" : "webm";
                   setProject({ ...p, scenes: scenes || [] });
-                  // Restore saved video URL
+
                   if (p.final_video_url) {
                     setRenderedVideoUrl(p.final_video_url);
                     setActiveTab("export");
                   } else {
+                    setRenderedVideoUrl(null);
                     setActiveTab("scenes");
                   }
                 }}>
