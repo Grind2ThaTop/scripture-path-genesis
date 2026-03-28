@@ -31,6 +31,10 @@ import TopicEngine from "./pages/TopicEngine";
 import LeaderboardPage from "./pages/LeaderboardPage";
 import ChurchPage from "./pages/ChurchPage";
 import AdminPage from "./pages/AdminPage";
+import CalendarPage from "./pages/CalendarPage";
+import OnboardingPage from "./pages/OnboardingPage";
+import LibraryPage from "./pages/LibraryPage";
+import MembersPage from "./pages/MembersPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
