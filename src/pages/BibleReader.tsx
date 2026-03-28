@@ -234,17 +234,26 @@ export default function BibleReader() {
               {passage.verses.map(verse => {
                 const ref = `${selectedBook.name} ${chapter}`;
                 const existing = allHighlights.find(h => h.reference === `${ref}:${verse.verse}`);
+                const restoredText = restoreNames(verse.text);
                 return (
-                  <HighlightableVerse
+                  <div
                     key={verse.verse}
-                    verseNumber={verse.verse}
-                    text={restoreNames(verse.text)}
-                    reference={ref}
-                    source="bible"
-                    testament={selectedBook.testament}
-                    existingHighlight={existing}
-                    onHighlightChange={() => setAllHighlights(getHighlights())}
-                  />
+                    className="cursor-pointer"
+                    onClick={() => {
+                      setStudyVerse({ ref: `${ref}:${verse.verse}`, text: restoredText, verse: verse.verse });
+                      setStudyOpen(true);
+                    }}
+                  >
+                    <HighlightableVerse
+                      verseNumber={verse.verse}
+                      text={restoredText}
+                      reference={ref}
+                      source="bible"
+                      testament={selectedBook.testament}
+                      existingHighlight={existing}
+                      onHighlightChange={() => setAllHighlights(getHighlights())}
+                    />
+                  </div>
                 );
               })}
             </div>
