@@ -1855,10 +1855,17 @@ export default function ShortsEngine() {
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold">Saved Projects</h2>
             <Button size="sm" onClick={() => {
+              if (renderedVideoUrl?.startsWith("blob:")) {
+                URL.revokeObjectURL(renderedVideoUrl);
+              }
+              renderedVideoBlobRef.current = null;
+              renderedVideoExtRef.current = "webm";
+              setRenderedVideoUrl(null);
+              setMusicUrl(null);
               setProject({
                 title: "", topic: "", verse_reference: "", verse_text: "",
                 duration: 30, style: "urban-prophetic", tone: "urgent",
-                voice_preset: "truth-narrator", cta: "Follow for truth",
+                voice_preset: "onyx", cta: "Follow for truth",
                 status: "draft", scenes: [],
               });
               setActiveTab("create");
@@ -1881,12 +1888,19 @@ export default function ShortsEngine() {
                     .select("*")
                     .eq("project_id", p.id)
                     .order("scene_order");
+
+                  if (renderedVideoUrl?.startsWith("blob:")) {
+                    URL.revokeObjectURL(renderedVideoUrl);
+                  }
+                  renderedVideoBlobRef.current = null;
+                  renderedVideoExtRef.current = p.final_video_url?.toLowerCase().includes(".mp4") ? "mp4" : "webm";
                   setProject({ ...p, scenes: scenes || [] });
-                  // Restore saved video URL
+
                   if (p.final_video_url) {
                     setRenderedVideoUrl(p.final_video_url);
                     setActiveTab("export");
                   } else {
+                    setRenderedVideoUrl(null);
                     setActiveTab("scenes");
                   }
                 }}>
