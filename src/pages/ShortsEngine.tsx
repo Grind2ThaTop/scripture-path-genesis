@@ -18,7 +18,7 @@ import {
   Video, Sparkles, Film, Mic, Download, Plus, Trash2, RefreshCw,
   ChevronUp, ChevronDown, Image as ImageIcon, Type, Clock, Zap, Play, ArrowLeft,
   Wand2, Settings, Volume2, FileVideo, Hash, Eye, Loader2, CheckCircle2,
-  Square, Pause
+  Square, Pause, Music
 } from "lucide-react";
 
 const TOPIC_PRESETS = [
@@ -49,6 +49,17 @@ const STYLE_PRESETS = [
 const TONE_PRESETS = ["urgent", "bold", "sobering", "confrontational", "teaching", "calm", "prophetic"];
 const DURATION_OPTIONS = [15, 30, 40, 45];
 const MOTION_TYPES = ["ken-burns", "zoom-in", "zoom-out", "pan-left", "pan-right", "parallax", "static"];
+
+const BEAT_PRESETS = [
+  { id: "hood-trap", label: "🔥 Hood Trap", prompt: "dark trap beat, heavy 808 bass, hi-hats, aggressive snare, cinematic tension, hood energy, no vocals, instrumental only" },
+  { id: "drill", label: "⚡ Drill", prompt: "UK drill beat, sliding 808s, dark piano melody, aggressive percussion, menacing energy, no vocals, instrumental only" },
+  { id: "boom-bap", label: "💥 Boom Bap", prompt: "boom bap hip hop beat, hard drums, chopped soul sample, gritty underground, no vocals, instrumental only" },
+  { id: "cinematic-hard", label: "🎬 Cinematic Hard", prompt: "epic cinematic trap beat, orchestral strings, heavy 808 bass, war drums, intense dark atmosphere, no vocals" },
+  { id: "dark-ambient", label: "🌑 Dark Ambient", prompt: "dark ambient atmospheric beat, deep bass, eerie pads, minimal percussion, suspenseful mood, no vocals" },
+  { id: "prophetic-fire", label: "🔥 Prophetic Fire", prompt: "aggressive spiritual warfare beat, tribal drums, distorted 808s, intense chanting atmosphere, battle energy, no vocals" },
+  { id: "street-gospel", label: "⛪ Street Gospel", prompt: "hard gospel trap beat, choir samples, heavy 808 bass, church organ, aggressive drums, street energy, no vocals" },
+  { id: "custom", label: "🎤 Custom Beat", prompt: "" },
+];
 
 interface Scene {
   id?: string;
@@ -313,6 +324,12 @@ export default function ShortsEngine() {
   const [rendering, setRendering] = useState(false);
   const [renderProgress, setRenderProgress] = useState({ pct: 0, message: "" });
   const [previewPlaying, setPreviewPlaying] = useState(false);
+  const [musicUrl, setMusicUrl] = useState<string | null>(null);
+  const [generatingMusic, setGeneratingMusic] = useState(false);
+  const [musicPrompt, setMusicPrompt] = useState("dark trap beat, heavy 808s, aggressive drums, cinematic tension, hood energy, no vocals");
+  const [musicPreset, setMusicPreset] = useState("hood-trap");
+  const musicAudioRef = useRef<HTMLAudioElement | null>(null);
+  const [musicPlaying, setMusicPlaying] = useState(false);
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -370,6 +387,82 @@ export default function ShortsEngine() {
     } catch (e: any) {
       toast.error(e.message || "Failed to generate voice");
       setPlayingAudio(null);
+    }
+  };
+
+  const generateMusic = async () => {
+    setGeneratingMusic(true);
+    const taskId = `music-${Date.now()}`;
+    addTask({ id: taskId, label: "Generating beat", module: "Shorts", progress: 0, message: "Submitting to AI...", status: "running" });
+    try {
+      const beatPrompt = musicPreset === "custom" 
+        ? musicPrompt 
+        : BEAT_PRESETS.find(b => b.id === musicPreset)?.prompt || musicPrompt;
+      
+      // Step 1: Submit
+      const { data, error } = await supabase.functions.invoke("shorts-media", {
+        body: { action: "generate_music", prompt: beatPrompt },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      
+      if (data?.audio_url) {
+        setMusicUrl(data.audio_url);
+        updateTask(taskId, { progress: 100, message: "Beat ready! 🔥", status: "done" });
+        toast.success("Beat generated! Hit play to preview.");
+        return;
+      }
+
+      // Step 2: Poll until complete
+      const genId = data?.generation_id;
+      if (!genId) throw new Error("No generation ID returned");
+      
+      updateTask(taskId, { progress: 15, message: "Beat is cooking... 🔥" });
+      
+      for (let attempt = 0; attempt < 30; attempt++) {
+        await new Promise(r => setTimeout(r, 3000));
+        updateTask(taskId, { progress: 15 + (attempt / 30) * 75, message: `Generating beat... (${attempt * 3}s)` });
+        
+        const { data: pollData, error: pollError } = await supabase.functions.invoke("shorts-media", {
+          body: { action: "poll_music", generation_id: genId },
+        });
+        
+        if (pollError) { console.error("Poll error:", pollError); continue; }
+        if (pollData?.error) { console.error("Poll data error:", pollData.error); continue; }
+        
+        if (pollData?.status === "completed" && pollData?.audio_url) {
+          setMusicUrl(pollData.audio_url);
+          updateTask(taskId, { progress: 100, message: "Beat ready! 🔥", status: "done" });
+          toast.success("Beat generated! Hit play to preview. 🔥");
+          return;
+        }
+        
+        if (pollData?.status === "error") {
+          throw new Error("Music generation failed on server");
+        }
+      }
+      
+      updateTask(taskId, { progress: 100, message: "Timed out — try again", status: "error" });
+      toast.error("Beat generation timed out. Try again.");
+    } catch (e: any) {
+      updateTask(taskId, { progress: 100, message: e.message, status: "error" });
+      toast.error(e.message || "Failed to generate beat");
+    } finally {
+      setGeneratingMusic(false);
+    }
+  };
+
+  const toggleMusicPlayback = () => {
+    if (!musicUrl) return;
+    if (musicPlaying && musicAudioRef.current) {
+      musicAudioRef.current.pause();
+      setMusicPlaying(false);
+    } else {
+      const audio = new Audio(musicUrl);
+      audio.onended = () => setMusicPlaying(false);
+      musicAudioRef.current = audio;
+      audio.play();
+      setMusicPlaying(true);
     }
   };
 
@@ -620,7 +713,7 @@ export default function ShortsEngine() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-5 w-full">
+        <TabsList className="grid grid-cols-6 w-full">
           <TabsTrigger value="create" className="flex items-center gap-1.5">
             <Sparkles className="w-3.5 h-3.5" /> Create
           </TabsTrigger>
@@ -632,6 +725,10 @@ export default function ShortsEngine() {
           </TabsTrigger>
           <TabsTrigger value="voice" className="flex items-center gap-1.5">
             <Mic className="w-3.5 h-3.5" /> Voice
+          </TabsTrigger>
+          <TabsTrigger value="music" className="flex items-center gap-1.5">
+            <Music className="w-3.5 h-3.5" /> Music
+            {musicUrl && <CheckCircle2 className="w-3 h-3 text-green-500" />}
           </TabsTrigger>
           <TabsTrigger value="export" className="flex items-center gap-1.5">
             <Download className="w-3.5 h-3.5" /> Export
@@ -1116,6 +1213,118 @@ export default function ShortsEngine() {
                   <Button variant="outline" size="sm" className="mt-2" onClick={() => setActiveTab("create")}>
                     <ArrowLeft className="w-3.5 h-3.5 mr-1" /> Go to Create
                   </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* MUSIC TAB */}
+        <TabsContent value="music" className="space-y-4 mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Music className="w-5 h-5" /> Background Beat
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <label className="text-xs font-medium text-muted-foreground mb-2 block">Beat Style</label>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                  {BEAT_PRESETS.map(preset => (
+                    <button
+                      key={preset.id}
+                      onClick={() => {
+                        setMusicPreset(preset.id);
+                        if (preset.prompt) setMusicPrompt(preset.prompt);
+                      }}
+                      className={`p-3 rounded-lg border text-left transition-all text-sm ${
+                        musicPreset === preset.id 
+                          ? "border-primary bg-primary/10 ring-1 ring-primary" 
+                          : "border-border hover:border-primary/50"
+                      }`}
+                    >
+                      <span className="font-medium">{preset.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {musicPreset === "custom" && (
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">Custom Beat Description</label>
+                  <Textarea
+                    value={musicPrompt}
+                    onChange={e => setMusicPrompt(e.target.value)}
+                    rows={3}
+                    placeholder="Describe the beat you want... e.g. 'dark trap beat, heavy 808s, aggressive drums'"
+                  />
+                </div>
+              )}
+
+              <div className="p-3 rounded-lg bg-muted/30 border">
+                <p className="text-xs text-muted-foreground mb-1">Current prompt:</p>
+                <p className="text-sm">{musicPreset === "custom" ? musicPrompt : BEAT_PRESETS.find(b => b.id === musicPreset)?.prompt}</p>
+              </div>
+
+              <Button
+                className="w-full h-12 text-base font-bold"
+                onClick={generateMusic}
+                disabled={generatingMusic}
+              >
+                {generatingMusic ? (
+                  <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> Cooking Beat...</>
+                ) : (
+                  <><Music className="w-5 h-5 mr-2" /> Generate Beat 🔥</>
+                )}
+              </Button>
+
+              {musicUrl && (
+                <div className="p-4 rounded-lg border bg-muted/20 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-12 w-12 rounded-full"
+                        onClick={toggleMusicPlayback}
+                      >
+                        {musicPlaying ? (
+                          <Pause className="w-5 h-5" />
+                        ) : (
+                          <Play className="w-5 h-5" />
+                        )}
+                      </Button>
+                      <div>
+                        <p className="font-semibold text-sm">Beat Ready</p>
+                        <p className="text-xs text-muted-foreground">
+                          {BEAT_PRESETS.find(b => b.id === musicPreset)?.label || "Custom Beat"}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" onClick={generateMusic} disabled={generatingMusic}>
+                        <RefreshCw className="w-3.5 h-3.5 mr-1" /> Regenerate
+                      </Button>
+                      <Button variant="outline" size="sm" asChild>
+                        <a href={musicUrl} download="beat.mp3" target="_blank" rel="noopener noreferrer">
+                          <Download className="w-3.5 h-3.5 mr-1" /> Download
+                        </a>
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="p-2 rounded bg-green-500/10 border border-green-500/30 flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0" />
+                    <p className="text-xs">This beat will be included when you render the final video.</p>
+                  </div>
+                </div>
+              )}
+
+              {!musicUrl && !generatingMusic && (
+                <div className="p-4 rounded-lg border border-dashed text-center text-muted-foreground">
+                  <Music className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">No beat generated yet. Pick a style and hit generate.</p>
+                  <p className="text-xs mt-1">AI generates custom instrumentals — no weak generic music. Every beat hits hard. 🔥</p>
                 </div>
               )}
             </CardContent>
