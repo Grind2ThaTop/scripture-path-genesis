@@ -299,6 +299,51 @@ export type Database = {
         }
         Relationships: []
       }
+      prophecy_content: {
+        Row: {
+          ai_interpretation: string
+          category: string
+          content_type: string
+          created_at: string
+          headline: string
+          id: string
+          scripture_reference: string
+          scripture_text: string
+          source_name: string | null
+          source_url: string | null
+          status: string
+          tags: string[] | null
+        }
+        Insert: {
+          ai_interpretation: string
+          category?: string
+          content_type?: string
+          created_at?: string
+          headline: string
+          id?: string
+          scripture_reference: string
+          scripture_text: string
+          source_name?: string | null
+          source_url?: string | null
+          status?: string
+          tags?: string[] | null
+        }
+        Update: {
+          ai_interpretation?: string
+          category?: string
+          content_type?: string
+          created_at?: string
+          headline?: string
+          id?: string
+          scripture_reference?: string
+          scripture_text?: string
+          source_name?: string | null
+          source_url?: string | null
+          status?: string
+          tags?: string[] | null
+        }
+        Relationships: []
+      }
       reading_progress: {
         Row: {
           book_name: string
