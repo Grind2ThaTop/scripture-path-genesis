@@ -15,7 +15,7 @@ serve(async (req) => {
 
     const sceneCount = duration <= 15 ? 4 : duration <= 30 ? 6 : 8;
 
-    const systemPrompt = `You are a cinematic Bible truth short-form video scriptwriter. You create hard-hitting, scripture-centered, emotionally powerful scripts for YouTube Shorts. No cheesy church language. Modern, direct, urgent, cinematic feel.`;
+    const systemPrompt = `You are a cinematic Bible truth short-form video scriptwriter. You create hard-hitting, scripture-centered, emotionally powerful scripts for YouTube Shorts. No cheesy church language. Modern, direct, urgent, cinematic feel. Target audience: Black community. All image prompts MUST feature Black people — Black men, Black women, Black families. Urban, relatable, real. Think hood truth, not church cringe.`;
 
     const userPrompt = `Create a ${duration}-second Bible truth short for YouTube Shorts.
 
@@ -73,7 +73,7 @@ Return the result using the generate_short_script function.`;
                         narration_text: { type: "string", description: "What the narrator says" },
                         caption_text: { type: "string", description: "Short punchy on-screen text (under 10 words)" },
                         verse_reference: { type: "string", description: "Scripture reference if applicable" },
-                        image_prompt: { type: "string", description: "Cinematic vertical image prompt for AI generation. Style: modern cinematic, dramatic lighting, high contrast, realistic, emotionally powerful, 9:16 vertical. Avoid: cartoon, cheesy church stock art, text artifacts." },
+                        image_prompt: { type: "string", description: "Cinematic vertical image prompt for AI generation. MUST feature Black people (Black man, Black woman, Black family, etc). Style: modern cinematic, dramatic lighting, high contrast, realistic, emotionally powerful, 9:16 vertical, urban/modern setting. Avoid: cartoon, cheesy church stock art, text artifacts, generic stock photos." },
                         motion_type: { type: "string", enum: ["ken-burns", "zoom-in", "zoom-out", "pan-left", "pan-right", "parallax", "static"] },
                         duration_ms: { type: "number", description: "Duration in milliseconds" },
                       },
