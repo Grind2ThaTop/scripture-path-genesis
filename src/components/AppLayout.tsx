@@ -6,32 +6,43 @@ import {
   BookOpen, GraduationCap, Languages, BarChart3,
   ChevronLeft, ChevronRight, Menu, X, Home, Compass, Book, Highlighter,
   Search, StickyNote, Flame, LogIn, LogOut, User, Share2, Users, Crown, Sword, Eye, Zap, Target,
-  Trophy, HandHeart, Shield
+  Trophy, HandHeart, Shield, CalendarDays, Library, CircleDot
 } from 'lucide-react';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 
-const navItems = [
-  { path: '/', label: 'Dashboard', icon: Home },
-  { path: '/daily', label: 'Daily Discipline', icon: Sword },
-  { path: '/bible', label: 'Bible (KJV)', icon: Book },
-  { path: '/search', label: 'Search', icon: Search },
-  { path: '/prophecy', label: 'Truth Cuts Deep', icon: Eye },
-  { path: '/viral', label: 'Viral Engine', icon: Zap, adminOnly: true },
-  { path: '/topics', label: 'Topic Engine', icon: Target, adminOnly: true },
-  { path: '/community', label: 'The Narrow Path', icon: Users },
-  { path: '/church', label: 'Church Mode', icon: HandHeart },
-  { path: '/leaderboard', label: 'Leaderboard', icon: Trophy },
-  { path: '/progression', label: 'Your Level', icon: Crown },
-  { path: '/highlights', label: 'Highlights', icon: Highlighter },
-  { path: '/notes', label: 'Notes & Bookmarks', icon: StickyNote },
-  { path: '/reading-plans', label: 'Reading Plans', icon: Flame },
-  { path: '/study-guide', label: 'Study Guide', icon: BookOpen },
-  { path: '/hebrew', label: 'Hebrew', icon: Languages },
-  { path: '/greek', label: 'Greek', icon: GraduationCap },
-  { path: '/share', label: 'Share the Truth', icon: Share2 },
-  { path: '/life-situations', label: 'Life Situations', icon: Compass },
-  { path: '/progress', label: 'Progress', icon: BarChart3 },
-  { path: '/admin', label: 'Admin', icon: Shield, adminOnly: true },
+const navSections = [
+  { label: 'Core', items: [
+    { path: '/', label: 'Home', icon: Home },
+    { path: '/community', label: 'Community', icon: Users },
+    { path: '/study-guide', label: 'Study', icon: BookOpen },
+    { path: '/calendar', label: 'Calendar', icon: CalendarDays },
+    { path: '/church', label: 'Prayer', icon: HandHeart },
+    { path: '/members', label: 'Members', icon: CircleDot },
+    { path: '/leaderboard', label: 'Leaderboard', icon: Trophy },
+    { path: '/library', label: 'Library', icon: Library },
+  ]},
+  { label: 'Study', items: [
+    { path: '/bible', label: 'Bible (KJV)', icon: Book },
+    { path: '/daily', label: 'Daily Discipline', icon: Sword },
+    { path: '/hebrew', label: 'Hebrew', icon: Languages },
+    { path: '/greek', label: 'Greek', icon: GraduationCap },
+    { path: '/life-situations', label: 'Life Situations', icon: Compass },
+    { path: '/reading-plans', label: 'Reading Plans', icon: Flame },
+  ]},
+  { label: 'You', items: [
+    { path: '/progression', label: 'Your Level', icon: Crown },
+    { path: '/highlights', label: 'Highlights', icon: Highlighter },
+    { path: '/notes', label: 'Notes & Bookmarks', icon: StickyNote },
+    { path: '/search', label: 'Search', icon: Search },
+    { path: '/share', label: 'Share the Truth', icon: Share2 },
+    { path: '/progress', label: 'Progress', icon: BarChart3 },
+  ]},
+  { label: 'Admin', adminOnly: true, items: [
+    { path: '/prophecy', label: 'Truth Cuts Deep', icon: Eye },
+    { path: '/viral', label: 'Viral Engine', icon: Zap },
+    { path: '/topics', label: 'Topic Engine', icon: Target },
+    { path: '/admin', label: 'Admin Controls', icon: Shield },
+  ]},
 ] as const;
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
