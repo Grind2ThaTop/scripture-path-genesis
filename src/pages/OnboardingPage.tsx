@@ -201,4 +201,4 @@ export default function OnboardingPage() {
   );
 }
 
-function Loader2Icon(props: any) { return <Loader2 {...props} />; }
+
