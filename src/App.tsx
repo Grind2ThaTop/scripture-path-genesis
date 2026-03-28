@@ -69,12 +69,12 @@ const App = () => (
               <Route path="/community" element={<CommunityPage />} />
               <Route path="/progression" element={<ProgressionPage />} />
               <Route path="/daily" element={<DailyDisciplinePage />} />
-              <Route path="/prophecy" element={<ProphecyHub />} />
-              <Route path="/viral" element={<ViralHub />} />
-              <Route path="/topics" element={<TopicEngine />} />
+              <Route path="/prophecy" element={<AdminRoute><ProphecyHub /></AdminRoute>} />
+              <Route path="/viral" element={<AdminRoute><ViralHub /></AdminRoute>} />
+              <Route path="/topics" element={<AdminRoute><TopicEngine /></AdminRoute>} />
               <Route path="/leaderboard" element={<LeaderboardPage />} />
               <Route path="/church" element={<ChurchPage />} />
-              <Route path="/admin" element={<AdminPage />} />
+              <Route path="/admin" element={<AdminRoute><AdminPage /></AdminRoute>} />
               <Route path="/calendar" element={<CalendarPage />} />
               <Route path="/onboarding" element={<OnboardingPage />} />
               <Route path="/library" element={<LibraryPage />} />
