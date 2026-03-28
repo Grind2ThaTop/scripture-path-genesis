@@ -4,7 +4,7 @@ import { discernmentLessons, DISCERNMENT_SECTIONS, type DiscernmentLesson } from
 import { supabase } from '@/integrations/supabase/client';
 import {
   Shield, ArrowLeft, ChevronRight, CheckCircle2, XCircle, AlertTriangle,
-  BookOpen, Eye, Zap, Send, Loader2, ArrowRight
+  BookOpen, Eye, Zap, Send, Loader2, ArrowRight, Link as LinkIcon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
