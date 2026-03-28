@@ -827,8 +827,9 @@ export default function ShortsEngine() {
       setBatchProgress({ current: i + 1, total: project.scenes.length, message: `Generating scene ${i + 1}...` });
       updateTask(taskId, { progress: pct, message: `Generating scene ${i + 1}/${project.scenes.length}...` });
       try {
+        const enhancedPrompt = enforceBlackRepresentation(scene.image_prompt);
         const { data, error } = await supabase.functions.invoke("shorts-media", {
-          body: { action: "generate_image", prompt: scene.image_prompt },
+          body: { action: "generate_image", prompt: enhancedPrompt },
         });
         if (error) throw error;
         if (data?.image_url) {
