@@ -18,6 +18,7 @@ const navItems = [
   { path: '/study-guide', label: 'Study Guide', icon: BookOpen },
   { path: '/hebrew', label: 'Hebrew', icon: Languages },
   { path: '/greek', label: 'Greek', icon: GraduationCap },
+  { path: '/share', label: 'Share the Truth', icon: Share2 },
   { path: '/life-situations', label: 'Life Situations', icon: Compass },
   { path: '/progress', label: 'Progress', icon: BarChart3 },
 ];

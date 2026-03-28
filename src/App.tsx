@@ -49,6 +49,7 @@ const App = () => (
               <Route path="/greek/:lessonId" element={<GreekLesson />} />
               <Route path="/bible" element={<BibleReader />} />
               <Route path="/highlights" element={<Highlights />} />
+              <Route path="/share" element={<SharePage />} />
               <Route path="/life-situations" element={<LifeSituations />} />
               <Route path="/progress" element={<Progress />} />
               <Route path="*" element={<NotFound />} />
