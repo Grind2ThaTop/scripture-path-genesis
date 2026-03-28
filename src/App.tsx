@@ -27,6 +27,7 @@ import ProgressionPage from "./pages/ProgressionPage";
 import DailyDisciplinePage from "./pages/DailyDisciplinePage";
 import ProphecyHub from "./pages/ProphecyHub";
 import ViralHub from "./pages/ViralHub";
+import TopicEngine from "./pages/TopicEngine";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -60,6 +61,7 @@ const App = () => (
               <Route path="/daily" element={<DailyDisciplinePage />} />
               <Route path="/prophecy" element={<ProphecyHub />} />
               <Route path="/viral" element={<ViralHub />} />
+              <Route path="/topics" element={<TopicEngine />} />
               <Route path="/life-situations" element={<LifeSituations />} />
               <Route path="/progress" element={<Progress />} />
               <Route path="*" element={<NotFound />} />

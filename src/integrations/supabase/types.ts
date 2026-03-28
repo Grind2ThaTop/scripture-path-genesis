@@ -186,6 +186,51 @@ export type Database = {
           },
         ]
       }
+      daily_topics: {
+        Row: {
+          angle: string
+          category: string
+          content_type: string
+          created_at: string
+          date: string
+          hook: string
+          id: string
+          philly_angle: string | null
+          priority: number
+          scripture_refs: string[] | null
+          tiktok_hook: string | null
+          used: boolean
+        }
+        Insert: {
+          angle: string
+          category: string
+          content_type?: string
+          created_at?: string
+          date?: string
+          hook: string
+          id?: string
+          philly_angle?: string | null
+          priority?: number
+          scripture_refs?: string[] | null
+          tiktok_hook?: string | null
+          used?: boolean
+        }
+        Update: {
+          angle?: string
+          category?: string
+          content_type?: string
+          created_at?: string
+          date?: string
+          hook?: string
+          id?: string
+          philly_angle?: string | null
+          priority?: number
+          scripture_refs?: string[] | null
+          tiktok_hook?: string | null
+          used?: boolean
+        }
+        Relationships: []
+      }
       highlights: {
         Row: {
           color: string
