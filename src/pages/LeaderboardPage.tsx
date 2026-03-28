@@ -9,8 +9,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
-const LEVEL_NAMES = ['', 'Milk', 'Foundation', 'Understanding', 'Application', 'Teacher'];
-const LEVEL_COLORS = ['', 'text-muted-foreground', 'text-blue-400', 'text-purple-400', 'text-orange-400', 'text-primary'];
+const LEVEL_NAMES = ['', 'Seeker', 'Learner', 'Rooted', 'Disciplined', 'Builder', 'Servant', 'Guide', 'Teacher', 'Elder-track'];
+const LEVEL_COLORS = ['', 'text-muted-foreground', 'text-blue-400', 'text-emerald-400', 'text-amber-400', 'text-orange-400', 'text-red-400', 'text-purple-400', 'text-primary', 'text-primary'];
 
 export default function LeaderboardPage() {
   const { user } = useAuth();
