@@ -858,19 +858,47 @@ export default function ShortsEngine() {
 
     try {
       const blob = await renderVideoToBlob(project.scenes, (pct, msg) => {
-        setRenderProgress({ pct, message: msg });
-        updateTask(taskId, { progress: pct, message: msg });
+        const adjustedPct = Math.round(pct * 0.8); // 0-80% for rendering
+        setRenderProgress({ pct: adjustedPct, message: msg });
+        updateTask(taskId, { progress: adjustedPct, message: msg });
       }, musicUrl);
+
+      // Upload to storage
+      setRenderProgress({ pct: 85, message: "Uploading video..." });
+      updateTask(taskId, { progress: 85, message: "Uploading video..." });
+
+      const fileName = `${user!.id}/${project.id || Date.now()}_${Date.now()}.webm`;
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from("shorts-videos")
+        .upload(fileName, blob, { contentType: "video/webm", upsert: true });
+
+      let publicUrl: string | null = null;
+      if (uploadError) {
+        console.error("Upload error:", uploadError);
+        toast.error("Video rendered but upload failed. You can still download it.");
+      } else {
+        const { data: urlData } = supabase.storage.from("shorts-videos").getPublicUrl(fileName);
+        publicUrl = urlData?.publicUrl || null;
+
+        // Save URL to project
+        if (project.id && publicUrl) {
+          await supabase.from("shorts_projects")
+            .update({ final_video_url: publicUrl, status: "rendered" })
+            .eq("id", project.id);
+          setProject(p => ({ ...p, final_video_url: publicUrl, status: "rendered" }));
+        }
+      }
 
       setRenderProgress({ pct: 100, message: "Video ready!" });
       updateTask(taskId, { progress: 100, message: "Video ready! 🔥", status: "done" });
 
       // Store for in-app playback
       if (renderedVideoUrl) URL.revokeObjectURL(renderedVideoUrl);
-      const url = URL.createObjectURL(blob);
-      setRenderedVideoUrl(url);
+      const localUrl = URL.createObjectURL(blob);
+      setRenderedVideoUrl(publicUrl || localUrl);
 
-      toast.success("Video rendered! Watch it below or download.");
+      toast.success("Video rendered & saved! 🔥");
+      loadProjects();
     } catch (e: any) {
       toast.error(`Render failed: ${e.message}`);
       updateTask(taskId, { progress: 0, message: e.message, status: "error" });
@@ -1768,7 +1796,13 @@ export default function ShortsEngine() {
                     .eq("project_id", p.id)
                     .order("scene_order");
                   setProject({ ...p, scenes: scenes || [] });
-                  setActiveTab("scenes");
+                  // Restore saved video URL
+                  if (p.final_video_url) {
+                    setRenderedVideoUrl(p.final_video_url);
+                    setActiveTab("export");
+                  } else {
+                    setActiveTab("scenes");
+                  }
                 }}>
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between">
@@ -1777,9 +1811,12 @@ export default function ShortsEngine() {
                         <p className="text-xs text-muted-foreground mt-1">{p.topic} · {p.duration}s · {p.style}</p>
                         <p className="text-xs text-muted-foreground">{p.verse_reference}</p>
                       </div>
-                      <Badge variant={p.status === "draft" ? "secondary" : "default"} className="text-xs">
-                        {p.status}
-                      </Badge>
+                      <div className="flex items-center gap-1.5">
+                        <Badge variant={p.status === "rendered" ? "default" : p.status === "draft" ? "secondary" : "outline"} className="text-xs">
+                          {p.status === "rendered" ? "✅ Video Ready" : p.status}
+                        </Badge>
+                        {p.final_video_url && <Video className="w-3.5 h-3.5 text-primary" />}
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
