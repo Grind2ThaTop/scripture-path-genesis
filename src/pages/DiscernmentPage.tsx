@@ -4,7 +4,7 @@ import { discernmentLessons, DISCERNMENT_SECTIONS, type DiscernmentLesson } from
 import { supabase } from '@/integrations/supabase/client';
 import {
   Shield, ArrowLeft, ChevronRight, CheckCircle2, XCircle, AlertTriangle,
-  BookOpen, Eye, Zap, Send, Loader2, ArrowRight
+  BookOpen, Eye, Zap, Send, Loader2, ArrowRight, Link as LinkIcon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -287,6 +287,7 @@ function TruthVsLieCard({ tvl }: { tvl: { lie: string; truth: string; scripture:
 
 function RedFlagScanner() {
   const [input, setInput] = useState('');
+  const [inputType, setInputType] = useState<'text' | 'link' | 'topic'>('text');
   const [result, setResult] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -296,16 +297,29 @@ function RedFlagScanner() {
     setResult(null);
     try {
       const { data, error } = await supabase.functions.invoke('discernment-scanner', {
-        body: { statement: input },
+        body: { statement: input, inputType },
       });
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
       setResult(data.analysis);
     } catch (e: any) {
-      toast.error('Scanner error: ' + (e.message || 'Try again'));
+      toast.error(e.message || 'Scanner error — try again');
     } finally {
       setLoading(false);
     }
   };
+
+  const placeholders: Record<string, string> = {
+    text: 'Paste a quote, sermon clip, or something someone told you…',
+    link: 'Drop a link — YouTube video, TikTok, tweet, article, blog post…',
+    topic: 'Type a topic + talking points (e.g. "The rapture is pre-tribulation because…")',
+  };
+
+  const typeLabels = [
+    { id: 'text' as const, label: '💬 Quote / Text', icon: '💬' },
+    { id: 'link' as const, label: '🔗 Drop a Link', icon: '🔗' },
+    { id: 'topic' as const, label: '🎯 Topic + Points', icon: '🎯' },
+  ];
 
   return (
     <div className="bg-card border border-primary/20 rounded-lg p-5 space-y-4">
@@ -313,13 +327,43 @@ function RedFlagScanner() {
         <Zap className="w-5 h-5 text-primary" />
         <h2 className="font-display font-semibold text-foreground">🔍 Red Flag Scanner</h2>
       </div>
-      <p className="text-xs text-muted-foreground">Paste something you saw online, heard in a sermon, or read somewhere. The scanner will analyze it against scripture.</p>
-      <Textarea placeholder="I saw this on TikTok… / My pastor said… / Someone told me…"
-        value={input} onChange={e => setInput(e.target.value)} className="bg-secondary border-border" />
+      <p className="text-xs text-muted-foreground">
+        Drop a link, paste a quote, or type a topic. The scanner scrapes, reads, and analyzes it against scripture.
+      </p>
+
+      {/* Input Type Selector */}
+      <div className="flex gap-2">
+        {typeLabels.map(t => (
+          <button key={t.id} onClick={() => { setInputType(t.id); setResult(null); }}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${
+              inputType === t.id ? 'bg-primary/10 border-primary/30 text-primary' : 'bg-secondary border-border text-muted-foreground hover:text-foreground'
+            }`}>
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      <Textarea
+        placeholder={placeholders[inputType]}
+        value={input}
+        onChange={e => setInput(e.target.value)}
+        className="bg-secondary border-border min-h-[80px]"
+        rows={inputType === 'topic' ? 4 : 2}
+      />
+
+      {inputType === 'link' && input.trim() && (
+        <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+          <LinkIcon className="w-3 h-3" /> We'll scrape and analyze the content from this link
+        </p>
+      )}
+
       <Button onClick={scan} disabled={!input.trim() || loading} className="w-full">
         {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Send className="w-4 h-4 mr-2" />}
-        Scan for Deception
+        {loading
+          ? (inputType === 'link' ? 'Scraping & Analyzing…' : 'Analyzing…')
+          : 'Scan for Deception'}
       </Button>
+
       {result && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
           className="bg-secondary/50 border border-border rounded-lg p-4">
