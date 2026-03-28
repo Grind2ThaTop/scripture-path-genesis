@@ -91,6 +91,7 @@ interface ShortProject {
   youtube_title?: string;
   youtube_description?: string;
   hashtags?: string[];
+  final_video_url?: string | null;
   scenes: Scene[];
 }
 
@@ -99,6 +100,7 @@ async function renderVideoToBlob(
   scenes: Scene[],
   onProgress: (pct: number, msg: string) => void,
   musicUrl?: string | null,
+  activatedAudioContext?: AudioContext | null,
 ): Promise<{ blob: Blob; mimeType: string; extension: "mp4" | "webm" }> {
   const isMobileDevice = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
   const prefersMp4 = /iPhone|iPad|iPod|Safari/i.test(navigator.userAgent) && !/Chrome|CriOS|FxiOS|Edg/i.test(navigator.userAgent);
@@ -221,7 +223,8 @@ async function renderVideoToBlob(
 
   onProgress(15, "Setting up video encoder...");
 
-  const liveAudioCtx = new AudioContext({ sampleRate: 44100 });
+  const createdLiveAudioCtx = !activatedAudioContext;
+  const liveAudioCtx = activatedAudioContext ?? new AudioContext({ sampleRate: 44100 });
   if (liveAudioCtx.state === "suspended") {
     await liveAudioCtx.resume();
   }
@@ -513,7 +516,11 @@ async function renderVideoToBlob(
   }
   videoStream.getTracks().forEach((track) => track.stop());
   audioDestination.stream.getTracks().forEach((track) => track.stop());
-  await Promise.allSettled([liveAudioCtx.close(), audioCtx.close()]);
+  const closers: Promise<unknown>[] = [audioCtx.close()];
+  if (createdLiveAudioCtx && liveAudioCtx.state !== "closed") {
+    closers.push(liveAudioCtx.close());
+  }
+  await Promise.allSettled(closers);
 
   return result;
 }
@@ -602,10 +609,23 @@ export default function ShortsEngine() {
   const musicAudioRef = useRef<HTMLAudioElement | null>(null);
   const [musicPlaying, setMusicPlaying] = useState(false);
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
+  const exportAudioContextRef = useRef<AudioContext | null>(null);
 
   useEffect(() => {
     if (user) loadProjects();
   }, [user]);
+
+  useEffect(() => {
+    return () => {
+      if (renderedVideoUrl?.startsWith("blob:")) {
+        URL.revokeObjectURL(renderedVideoUrl);
+      }
+
+      if (exportAudioContextRef.current && exportAudioContextRef.current.state !== "closed") {
+        void exportAudioContextRef.current.close();
+      }
+    };
+  }, [renderedVideoUrl]);
 
   const loadProjects = async () => {
     const { data } = await supabase
@@ -980,12 +1000,20 @@ export default function ShortsEngine() {
     addTask({ id: taskId, label: `Rendering "${project.title || "Truth Short"}"`, module: "Shorts", progress: 0, message: "Preparing...", status: "running" });
 
     try {
+      if (!exportAudioContextRef.current || exportAudioContextRef.current.state === "closed") {
+        exportAudioContextRef.current = new AudioContext({ sampleRate: 44100 });
+      }
+
+      if (exportAudioContextRef.current.state === "suspended") {
+        await exportAudioContextRef.current.resume();
+      }
+
       const scenesWithAudio = await ensureSceneAudio(project.scenes, taskId);
       const rendered = await renderVideoToBlob(scenesWithAudio, (pct, msg) => {
         const adjustedPct = Math.max(20, Math.round(pct * 0.8));
         setRenderProgress({ pct: adjustedPct, message: msg });
         updateTask(taskId, { progress: adjustedPct, message: msg });
-      }, musicUrl);
+      }, musicUrl, exportAudioContextRef.current);
 
       setRenderProgress({ pct: 85, message: "Uploading video..." });
       updateTask(taskId, { progress: 85, message: "Uploading video..." });
@@ -1017,10 +1045,10 @@ export default function ShortsEngine() {
       if (renderedVideoUrl?.startsWith("blob:")) {
         URL.revokeObjectURL(renderedVideoUrl);
       }
-      const localUrl = URL.createObjectURL(rendered.blob);
       renderedVideoBlobRef.current = rendered.blob;
       renderedVideoExtRef.current = rendered.extension;
-      setRenderedVideoUrl(localUrl);
+      const playbackUrl = publicUrl ?? URL.createObjectURL(rendered.blob);
+      setRenderedVideoUrl(playbackUrl);
       setActiveTab("export");
 
       toast.success("Video rendered with audio. Save it below. 🔥");
@@ -1029,25 +1057,33 @@ export default function ShortsEngine() {
       toast.error(`Render failed: ${e.message}`);
       updateTask(taskId, { progress: 0, message: e.message, status: "error" });
     } finally {
+      if (exportAudioContextRef.current && exportAudioContextRef.current.state !== "closed") {
+        await exportAudioContextRef.current.close();
+      }
+      exportAudioContextRef.current = null;
       setRendering(false);
     }
   };
 
   const downloadVideo = async () => {
-    if (!renderedVideoUrl) return;
-    try {
-      const blob = renderedVideoBlobRef.current ?? await fetch(renderedVideoUrl).then((response) => {
-        if (!response.ok) throw new Error(`Failed to fetch video: ${response.status}`);
-        return response.blob();
-      });
+    const remoteUrl = project.final_video_url || (renderedVideoUrl?.startsWith("http") ? renderedVideoUrl : null);
+    if (!renderedVideoUrl && !remoteUrl && !renderedVideoBlobRef.current) return;
 
-      const extension = renderedVideoExtRef.current || (renderedVideoUrl.toLowerCase().includes(".mp4") ? "mp4" : "webm");
-      const mimeType = blob.type || (extension === "mp4" ? "video/mp4" : "video/webm");
+    try {
+      const blob = renderedVideoBlobRef.current ?? (renderedVideoUrl
+        ? await fetch(renderedVideoUrl).then((response) => {
+            if (!response.ok) throw new Error(`Failed to fetch video: ${response.status}`);
+            return response.blob();
+          })
+        : null);
+
+      const extension = renderedVideoExtRef.current || ((renderedVideoUrl || remoteUrl || "").toLowerCase().includes(".mp4") ? "mp4" : "webm");
+      const mimeType = blob?.type || (extension === "mp4" ? "video/mp4" : "video/webm");
       const safeTitle = (project.title || "truth-short").trim().replace(/[^a-z0-9]+/gi, "-").replace(/^-+|-+$/g, "").toLowerCase() || "truth-short";
       const fileName = `${safeTitle}_${Date.now()}.${extension}`;
       const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
 
-      if (isMobile && navigator.share) {
+      if (isMobile && navigator.share && blob) {
         const file = new File([blob], fileName, { type: mimeType });
         const canShareFiles = typeof navigator.canShare !== "function" || navigator.canShare({ files: [file] });
 
@@ -1056,6 +1092,29 @@ export default function ShortsEngine() {
           toast.success("Use your phone’s save/share sheet to keep the video.");
           return;
         }
+      }
+
+      if (isMobile && navigator.share && remoteUrl) {
+        await navigator.share({ url: remoteUrl, title: project.title || "Truth Short" });
+        toast.success("Use your phone’s save/share sheet to keep the video.");
+        return;
+      }
+
+      if (!blob && remoteUrl) {
+        const a = document.createElement("a");
+        a.href = remoteUrl;
+        a.download = fileName;
+        a.rel = "noopener noreferrer";
+        a.target = "_blank";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        toast.success(isMobile ? "Opened the saved video. Use your browser’s save/share option." : "Video download started. 📲");
+        return;
+      }
+
+      if (!blob) {
+        throw new Error("No rendered video is available to download yet.");
       }
 
       const url = URL.createObjectURL(blob);
@@ -1821,7 +1880,7 @@ export default function ShortsEngine() {
                     </Button>
                   </div>
                   <p className="text-xs text-muted-foreground text-center">
-                    WebM format (1080×1920) · Ready for YouTube Shorts upload
+                    {(renderedVideoExtRef.current || "webm").toUpperCase()} format · Ready for YouTube Shorts upload
                   </p>
                 </div>
               )}
@@ -1844,7 +1903,7 @@ export default function ShortsEngine() {
 
               {!renderedVideoUrl && (
                 <p className="text-xs text-muted-foreground text-center">
-                  Renders as WebM video with motion effects and burned-in captions. Ready for YouTube Shorts upload.
+                  Renders a vertical video with motion effects and burned-in captions. Ready for Shorts upload.
                 </p>
               )}
             </CardContent>
