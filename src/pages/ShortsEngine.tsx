@@ -313,6 +313,12 @@ export default function ShortsEngine() {
   const [rendering, setRendering] = useState(false);
   const [renderProgress, setRenderProgress] = useState({ pct: 0, message: "" });
   const [previewPlaying, setPreviewPlaying] = useState(false);
+  const [musicUrl, setMusicUrl] = useState<string | null>(null);
+  const [generatingMusic, setGeneratingMusic] = useState(false);
+  const [musicPrompt, setMusicPrompt] = useState("dark trap beat, heavy 808s, aggressive drums, cinematic tension, hood energy, no vocals");
+  const [musicPreset, setMusicPreset] = useState("hood-trap");
+  const musicAudioRef = useRef<HTMLAudioElement | null>(null);
+  const [musicPlaying, setMusicPlaying] = useState(false);
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
