@@ -93,17 +93,19 @@ export default function ProphecyHub() {
             Current events mapped to biblical prophecy — no speculation, just scripture.
           </p>
         </div>
-        <Button
-          onClick={runEngine}
-          disabled={generating}
-          className="bg-primary text-primary-foreground hover:bg-primary/90"
-        >
-          {generating ? (
-            <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Scanning News...</>
-          ) : (
-            <><RefreshCw className="mr-2 h-4 w-4" /> Run Prophecy Engine</>
-          )}
-        </Button>
+        {isAdmin && (
+          <Button
+            onClick={runEngine}
+            disabled={generating}
+            className="bg-primary text-primary-foreground hover:bg-primary/90"
+          >
+            {generating ? (
+              <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Scanning News...</>
+            ) : (
+              <><RefreshCw className="mr-2 h-4 w-4" /> Run Prophecy Engine</>
+            )}
+          </Button>
+        )}
       </div>
 
       {/* Category filters */}
