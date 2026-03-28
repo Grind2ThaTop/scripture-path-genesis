@@ -800,6 +800,134 @@ export type Database = {
         }
         Relationships: []
       }
+      shorts_projects: {
+        Row: {
+          created_at: string
+          cta: string | null
+          duration: number
+          final_video_url: string | null
+          hashtags: string[] | null
+          id: string
+          script: string | null
+          status: string
+          style: string
+          thumbnail_url: string | null
+          title: string
+          tone: string
+          topic: string
+          updated_at: string
+          user_id: string
+          verse_reference: string
+          verse_text: string | null
+          voice_preset: string | null
+          youtube_description: string | null
+          youtube_title: string | null
+        }
+        Insert: {
+          created_at?: string
+          cta?: string | null
+          duration?: number
+          final_video_url?: string | null
+          hashtags?: string[] | null
+          id?: string
+          script?: string | null
+          status?: string
+          style?: string
+          thumbnail_url?: string | null
+          title: string
+          tone?: string
+          topic: string
+          updated_at?: string
+          user_id: string
+          verse_reference: string
+          verse_text?: string | null
+          voice_preset?: string | null
+          youtube_description?: string | null
+          youtube_title?: string | null
+        }
+        Update: {
+          created_at?: string
+          cta?: string | null
+          duration?: number
+          final_video_url?: string | null
+          hashtags?: string[] | null
+          id?: string
+          script?: string | null
+          status?: string
+          style?: string
+          thumbnail_url?: string | null
+          title?: string
+          tone?: string
+          topic?: string
+          updated_at?: string
+          user_id?: string
+          verse_reference?: string
+          verse_text?: string | null
+          voice_preset?: string | null
+          youtube_description?: string | null
+          youtube_title?: string | null
+        }
+        Relationships: []
+      }
+      shorts_scenes: {
+        Row: {
+          caption_text: string
+          created_at: string
+          duration_ms: number
+          generated_image_url: string | null
+          id: string
+          image_prompt: string | null
+          motion_type: string | null
+          narration_text: string
+          project_id: string
+          scene_order: number
+          transition_type: string | null
+          updated_at: string
+          verse_reference: string | null
+          video_generation_id: string | null
+        }
+        Insert: {
+          caption_text?: string
+          created_at?: string
+          duration_ms?: number
+          generated_image_url?: string | null
+          id?: string
+          image_prompt?: string | null
+          motion_type?: string | null
+          narration_text?: string
+          project_id: string
+          scene_order?: number
+          transition_type?: string | null
+          updated_at?: string
+          verse_reference?: string | null
+          video_generation_id?: string | null
+        }
+        Update: {
+          caption_text?: string
+          created_at?: string
+          duration_ms?: number
+          generated_image_url?: string | null
+          id?: string
+          image_prompt?: string | null
+          motion_type?: string | null
+          narration_text?: string
+          project_id?: string
+          scene_order?: number
+          transition_type?: string | null
+          updated_at?: string
+          verse_reference?: string | null
+          video_generation_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shorts_scenes_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "shorts_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       study_notes: {
         Row: {
           content: string
