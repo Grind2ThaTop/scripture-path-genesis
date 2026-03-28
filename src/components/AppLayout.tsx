@@ -5,7 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import {
   BookOpen, GraduationCap, Languages, BarChart3,
   ChevronLeft, ChevronRight, Menu, X, Home, Compass, Book, Highlighter,
-  Search, StickyNote, Flame, LogIn, LogOut, User
+  Search, StickyNote, Flame, LogIn, LogOut, User, Share2
 } from 'lucide-react';
 
 const navItems = [
@@ -18,6 +18,7 @@ const navItems = [
   { path: '/study-guide', label: 'Study Guide', icon: BookOpen },
   { path: '/hebrew', label: 'Hebrew', icon: Languages },
   { path: '/greek', label: 'Greek', icon: GraduationCap },
+  { path: '/share', label: 'Share the Truth', icon: Share2 },
   { path: '/life-situations', label: 'Life Situations', icon: Compass },
   { path: '/progress', label: 'Progress', icon: BarChart3 },
 ];

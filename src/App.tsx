@@ -21,6 +21,7 @@ import ResetPassword from "./pages/ResetPassword";
 import SearchPage from "./pages/SearchPage";
 import NotesPage from "./pages/NotesPage";
 import ReadingPlansPage from "./pages/ReadingPlansPage";
+import SharePage from "./pages/SharePage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -48,6 +49,7 @@ const App = () => (
               <Route path="/greek/:lessonId" element={<GreekLesson />} />
               <Route path="/bible" element={<BibleReader />} />
               <Route path="/highlights" element={<Highlights />} />
+              <Route path="/share" element={<SharePage />} />
               <Route path="/life-situations" element={<LifeSituations />} />
               <Route path="/progress" element={<Progress />} />
               <Route path="*" element={<NotFound />} />
