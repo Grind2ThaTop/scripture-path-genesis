@@ -189,10 +189,7 @@ serve(async (req) => {
     }
 
     if (action === "poll_music") {
-      const { generation_id } = await req.json().catch(() => ({ generation_id: null }));
-      const gid = generation_id || prompt; // fallback
-      
-      if (!gid) throw new Error("generation_id required for polling");
+      if (!generation_id) throw new Error("generation_id required for polling");
 
       const pollResponse = await fetch(`https://api.aimlapi.com/v2/generate/audio?generation_id=${gid}`, {
         method: "GET",
