@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import logoImg from '@/assets/logo.png';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/hooks/useAuth';
@@ -82,11 +83,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <div className={`p-4 border-b border-border flex items-center ${collapsed ? 'justify-center' : 'justify-between'}`}>
           {!collapsed && (
             <Link to="/" className="flex items-center gap-2">
-              <span className="text-gold text-xl font-display font-bold">דרך</span>
-              <span className="font-display text-foreground text-lg font-semibold">Derekh</span>
+              <img src={logoImg} alt="Derekh Emet" className="h-8 w-8 object-contain" />
+              <span className="font-display text-foreground text-lg font-semibold">Derekh Emet</span>
             </Link>
           )}
-          {collapsed && <span className="text-gold text-xl font-display font-bold">ד</span>}
+          {collapsed && (
+            <Link to="/">
+              <img src={logoImg} alt="Derekh Emet" className="h-7 w-7 object-contain" />
+            </Link>
+          )}
           <button
             onClick={() => setCollapsed(!collapsed)}
             className="hidden lg:flex text-muted-foreground hover:text-foreground transition-colors"
@@ -158,7 +163,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 <LogIn size={16} /> Sign In
               </Link>
             )}
-            <p className="text-xs text-muted-foreground font-mono">v3.0 · Scripture Intelligence</p>
+            <p className="text-xs text-muted-foreground font-mono">v3.0 · Derekh Emet</p>
           </div>
         )}
       </aside>
@@ -171,8 +176,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <Menu size={22} />
           </button>
           <Link to="/" className="flex items-center gap-2">
-            <span className="text-gold text-lg font-display font-bold">דרך</span>
-            <span className="font-display text-foreground font-semibold">Derekh</span>
+            <img src={logoImg} alt="Derekh Emet" className="h-7 w-7 object-contain" />
+            <span className="font-display text-foreground font-semibold">Derekh Emet</span>
           </Link>
           <div className="w-6" />
         </header>
