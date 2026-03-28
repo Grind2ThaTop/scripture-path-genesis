@@ -88,6 +88,8 @@ const App = () => (
               <Route path="/discernment" element={<DiscernmentPage />} />
               <Route path="/yahweh-is-one" element={<YahwehIsOnePage />} />
               <Route path="/shorts" element={<ShortsEngine />} />
+              <Route path="/keywords" element={<KeywordResearch />} />
+              <Route path="/stories" element={<BibleStories />} />
               <Route path="/life-situations" element={<LifeSituations />} />
               <Route path="/progress" element={<Progress />} />
               <Route path="*" element={<NotFound />} />
