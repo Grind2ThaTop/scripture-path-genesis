@@ -323,6 +323,7 @@ export default function ShortsEngine() {
   const [batchProgress, setBatchProgress] = useState({ current: 0, total: 0, message: "" });
   const [rendering, setRendering] = useState(false);
   const [renderProgress, setRenderProgress] = useState({ pct: 0, message: "" });
+  const [renderedVideoUrl, setRenderedVideoUrl] = useState<string | null>(null);
   const [previewPlaying, setPreviewPlaying] = useState(false);
   const [musicUrl, setMusicUrl] = useState<string | null>(null);
   const [generatingMusic, setGeneratingMusic] = useState(false);
