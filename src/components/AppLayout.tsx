@@ -5,8 +5,10 @@ import { useAuth } from '@/hooks/useAuth';
 import {
   BookOpen, GraduationCap, Languages, BarChart3,
   ChevronLeft, ChevronRight, Menu, X, Home, Compass, Book, Highlighter,
-  Search, StickyNote, Flame, LogIn, LogOut, User, Share2, Users, Crown, Sword, Eye, Zap, Target
+  Search, StickyNote, Flame, LogIn, LogOut, User, Share2, Users, Crown, Sword, Eye, Zap, Target,
+  Trophy, HandHeart, Shield
 } from 'lucide-react';
+import { useIsAdmin } from '@/hooks/useIsAdmin';
 
 const navItems = [
   { path: '/', label: 'Dashboard', icon: Home },
@@ -14,9 +16,11 @@ const navItems = [
   { path: '/bible', label: 'Bible (KJV)', icon: Book },
   { path: '/search', label: 'Search', icon: Search },
   { path: '/prophecy', label: 'Truth Cuts Deep', icon: Eye },
-  { path: '/viral', label: 'Viral Engine', icon: Zap },
-  { path: '/topics', label: 'Topic Engine', icon: Target },
+  { path: '/viral', label: 'Viral Engine', icon: Zap, adminOnly: true },
+  { path: '/topics', label: 'Topic Engine', icon: Target, adminOnly: true },
   { path: '/community', label: 'The Narrow Path', icon: Users },
+  { path: '/church', label: 'Church Mode', icon: HandHeart },
+  { path: '/leaderboard', label: 'Leaderboard', icon: Trophy },
   { path: '/progression', label: 'Your Level', icon: Crown },
   { path: '/highlights', label: 'Highlights', icon: Highlighter },
   { path: '/notes', label: 'Notes & Bookmarks', icon: StickyNote },
@@ -27,7 +31,8 @@ const navItems = [
   { path: '/share', label: 'Share the Truth', icon: Share2 },
   { path: '/life-situations', label: 'Life Situations', icon: Compass },
   { path: '/progress', label: 'Progress', icon: BarChart3 },
-];
+  { path: '/admin', label: 'Admin', icon: Shield, adminOnly: true },
+] as const;
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
