@@ -11,32 +11,31 @@ import {
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 
 const navSections = [
-  { label: 'Core', items: [
-    { path: '/', label: 'Home', icon: Home },
+  { label: 'Home', items: [
+    { path: '/', label: 'Dashboard', icon: Home },
     { path: '/community', label: 'Community', icon: Users },
-    { path: '/study-guide', label: 'Study', icon: BookOpen },
     { path: '/calendar', label: 'Calendar', icon: CalendarDays },
     { path: '/church', label: 'Prayer', icon: HandHeart },
-    { path: '/members', label: 'Members', icon: CircleDot },
-    { path: '/leaderboard', label: 'Leaderboard', icon: Trophy },
-    { path: '/library', label: 'Library', icon: Library },
   ]},
   { label: 'Study', items: [
     { path: '/bible', label: 'Bible (KJV)', icon: Book },
+    { path: '/study-guide', label: 'Study Guide', icon: BookOpen },
     { path: '/discernment', label: 'Discernment', icon: Shield },
     { path: '/yahweh-is-one', label: 'Yahweh Is One', icon: Crown },
     { path: '/daily', label: 'Daily Discipline', icon: Sword },
     { path: '/hebrew', label: 'Hebrew', icon: Languages },
     { path: '/greek', label: 'Greek', icon: GraduationCap },
-    { path: '/life-situations', label: 'Life Situations', icon: Compass },
-    { path: '/reading-plans', label: 'Reading Plans', icon: Flame },
+  ]},
+  { label: 'Community', items: [
+    { path: '/members', label: 'Members', icon: CircleDot },
+    { path: '/leaderboard', label: 'Leaderboard', icon: Trophy },
+    { path: '/library', label: 'Library', icon: Library },
   ]},
   { label: 'You', items: [
     { path: '/progression', label: 'Your Level', icon: Crown },
     { path: '/highlights', label: 'Highlights', icon: Highlighter },
     { path: '/notes', label: 'Notes & Bookmarks', icon: StickyNote },
     { path: '/search', label: 'Search', icon: Search },
-    { path: '/share', label: 'Share the Truth', icon: Share2 },
     { path: '/progress', label: 'Progress', icon: BarChart3 },
   ]},
   { label: 'Admin', adminOnly: true, items: [
