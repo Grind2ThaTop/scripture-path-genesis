@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
@@ -12,10 +12,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
+import { Progress } from "@/components/ui/progress";
 import {
   Video, Sparkles, Film, Mic, Download, Plus, Trash2, RefreshCw,
   ChevronUp, ChevronDown, Image, Type, Clock, Zap, Play, ArrowLeft,
-  Wand2, Settings, Volume2, FileVideo, Hash, Eye
+  Wand2, Settings, Volume2, FileVideo, Hash, Eye, Loader2, CheckCircle2,
+  Square, Pause
 } from "lucide-react";
 
 const TOPIC_PRESETS = [
@@ -79,6 +81,210 @@ interface ShortProject {
   scenes: Scene[];
 }
 
+// Canvas video renderer - renders scenes with motion effects and captions
+async function renderVideoToBlob(
+  scenes: Scene[],
+  onProgress: (pct: number, msg: string) => void
+): Promise<Blob> {
+  const WIDTH = 1080;
+  const HEIGHT = 1920;
+  const FPS = 30;
+
+  const canvas = document.createElement("canvas");
+  canvas.width = WIDTH;
+  canvas.height = HEIGHT;
+  const ctx = canvas.getContext("2d")!;
+
+  // Load all scene images
+  onProgress(5, "Loading scene images...");
+  const images: (HTMLImageElement | null)[] = [];
+  for (let i = 0; i < scenes.length; i++) {
+    if (scenes[i].generated_image_url) {
+      try {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        await new Promise<void>((resolve, reject) => {
+          img.onload = () => resolve();
+          img.onerror = () => resolve(); // fallback to solid color
+          img.src = scenes[i].generated_image_url!;
+        });
+        images.push(img);
+      } catch {
+        images.push(null);
+      }
+    } else {
+      images.push(null);
+    }
+  }
+
+  onProgress(15, "Setting up video encoder...");
+
+  const stream = canvas.captureStream(FPS);
+  const mediaRecorder = new MediaRecorder(stream, {
+    mimeType: MediaRecorder.isTypeSupported("video/webm;codecs=vp9")
+      ? "video/webm;codecs=vp9"
+      : "video/webm",
+    videoBitsPerSecond: 8_000_000,
+  });
+
+  const chunks: Blob[] = [];
+  mediaRecorder.ondataavailable = (e) => {
+    if (e.data.size > 0) chunks.push(e.data);
+  };
+
+  const recordingDone = new Promise<Blob>((resolve) => {
+    mediaRecorder.onstop = () => {
+      resolve(new Blob(chunks, { type: "video/webm" }));
+    };
+  });
+
+  mediaRecorder.start();
+
+  // Render each scene frame by frame
+  const totalFrames = scenes.reduce((sum, s) => sum + Math.round((s.duration_ms / 1000) * FPS), 0);
+  let globalFrame = 0;
+
+  for (let si = 0; si < scenes.length; si++) {
+    const scene = scenes[si];
+    const sceneFrames = Math.round((scene.duration_ms / 1000) * FPS);
+    const img = images[si];
+
+    for (let f = 0; f < sceneFrames; f++) {
+      const progress = f / sceneFrames;
+
+      // Background
+      ctx.fillStyle = "#0a0a0a";
+      ctx.fillRect(0, 0, WIDTH, HEIGHT);
+
+      // Draw image with motion effect
+      if (img) {
+        ctx.save();
+        const motion = scene.motion_type || "ken-burns";
+        let scale = 1;
+        let offsetX = 0;
+        let offsetY = 0;
+
+        if (motion === "ken-burns") {
+          scale = 1 + progress * 0.15;
+          offsetX = -progress * 40;
+          offsetY = -progress * 30;
+        } else if (motion === "zoom-in") {
+          scale = 1 + progress * 0.25;
+        } else if (motion === "zoom-out") {
+          scale = 1.25 - progress * 0.25;
+        } else if (motion === "pan-left") {
+          offsetX = -progress * 100;
+        } else if (motion === "pan-right") {
+          offsetX = progress * 100;
+        }
+
+        const imgAspect = img.width / img.height;
+        const canvasAspect = WIDTH / HEIGHT;
+        let drawW, drawH;
+        if (imgAspect > canvasAspect) {
+          drawH = HEIGHT * scale;
+          drawW = drawH * imgAspect;
+        } else {
+          drawW = WIDTH * scale;
+          drawH = drawW / imgAspect;
+        }
+        const dx = (WIDTH - drawW) / 2 + offsetX;
+        const dy = (HEIGHT - drawH) / 2 + offsetY;
+
+        // Fade in first 10 frames, fade out last 10
+        const fadeIn = Math.min(f / 10, 1);
+        const fadeOut = Math.min((sceneFrames - f) / 10, 1);
+        ctx.globalAlpha = fadeIn * fadeOut;
+        ctx.drawImage(img, dx, dy, drawW, drawH);
+        ctx.globalAlpha = 1;
+        ctx.restore();
+      } else {
+        // Gradient fallback
+        const grad = ctx.createLinearGradient(0, 0, 0, HEIGHT);
+        grad.addColorStop(0, "#1a0a0a");
+        grad.addColorStop(1, "#0a0a1a");
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, WIDTH, HEIGHT);
+      }
+
+      // Dark overlay for text readability
+      ctx.fillStyle = "rgba(0,0,0,0.35)";
+      ctx.fillRect(0, 0, WIDTH, HEIGHT);
+
+      // Caption text - center of screen, bold
+      if (scene.caption_text) {
+        const captionY = HEIGHT * 0.45;
+        ctx.save();
+        ctx.textAlign = "center";
+        ctx.fillStyle = "#ffffff";
+        ctx.shadowColor = "rgba(0,0,0,0.8)";
+        ctx.shadowBlur = 20;
+        ctx.font = "bold 64px sans-serif";
+
+        // Word wrap
+        const words = scene.caption_text.split(" ");
+        const lines: string[] = [];
+        let currentLine = "";
+        for (const word of words) {
+          const test = currentLine ? `${currentLine} ${word}` : word;
+          if (ctx.measureText(test).width > WIDTH * 0.85) {
+            lines.push(currentLine);
+            currentLine = word;
+          } else {
+            currentLine = test;
+          }
+        }
+        if (currentLine) lines.push(currentLine);
+
+        const lineHeight = 80;
+        const startY = captionY - ((lines.length - 1) * lineHeight) / 2;
+
+        // Animate text in word by word
+        const textProgress = Math.min(f / 15, 1);
+        ctx.globalAlpha = textProgress;
+
+        lines.forEach((line, li) => {
+          ctx.fillText(line, WIDTH / 2, startY + li * lineHeight);
+        });
+
+        ctx.globalAlpha = 1;
+        ctx.restore();
+      }
+
+      // Verse reference - bottom area
+      if (scene.verse_reference) {
+        ctx.save();
+        ctx.textAlign = "center";
+        ctx.fillStyle = "rgba(255,255,255,0.7)";
+        ctx.font = "italic 40px serif";
+        ctx.shadowColor = "rgba(0,0,0,0.6)";
+        ctx.shadowBlur = 10;
+        ctx.fillText(scene.verse_reference, WIDTH / 2, HEIGHT * 0.78);
+        ctx.restore();
+      }
+
+      // Scene number indicator (small, top-left)
+      ctx.save();
+      ctx.fillStyle = "rgba(255,255,255,0.3)";
+      ctx.font = "24px sans-serif";
+      ctx.fillText(`${si + 1}/${scenes.length}`, 40, 60);
+      ctx.restore();
+
+      // Wait for next frame
+      await new Promise((resolve) => setTimeout(resolve, 1000 / FPS));
+
+      globalFrame++;
+      const pct = 15 + (globalFrame / totalFrames) * 80;
+      onProgress(pct, `Rendering scene ${si + 1}/${scenes.length}...`);
+    }
+  }
+
+  onProgress(95, "Finalizing video...");
+  mediaRecorder.stop();
+
+  return recordingDone;
+}
+
 export default function ShortsEngine() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("create");
@@ -100,6 +306,12 @@ export default function ShortsEngine() {
   const [expandedScene, setExpandedScene] = useState<number | null>(null);
   const [generatingImage, setGeneratingImage] = useState<number | null>(null);
   const [playingAudio, setPlayingAudio] = useState<number | null>(null);
+  const [batchGenerating, setBatchGenerating] = useState(false);
+  const [batchProgress, setBatchProgress] = useState({ current: 0, total: 0, message: "" });
+  const [rendering, setRendering] = useState(false);
+  const [renderProgress, setRenderProgress] = useState({ pct: 0, message: "" });
+  const [previewPlaying, setPreviewPlaying] = useState(false);
+  const previewCanvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     if (user) loadProjects();
