@@ -789,15 +789,31 @@ export default function ShortsEngine() {
             </Card>
           ) : (
             <>
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between flex-wrap gap-2">
                 <div className="flex items-center gap-3">
                   <Badge variant="outline">{project.scenes.length} scenes</Badge>
                   <Badge variant="outline">
                     <Clock className="w-3 h-3 mr-1" />
                     {(totalDurationMs / 1000).toFixed(1)}s total
                   </Badge>
+                  <Badge variant={scenesWithImages === project.scenes.length ? "default" : "secondary"}>
+                    {scenesWithImages}/{project.scenes.length} images
+                  </Badge>
                 </div>
-                <Button variant="outline" size="sm" onClick={() => {
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={generateAllImages}
+                    disabled={batchGenerating}
+                  >
+                    {batchGenerating ? (
+                      <><Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> {batchProgress.message}</>
+                    ) : (
+                      <><Wand2 className="w-3.5 h-3.5 mr-1" /> Generate All Images</>
+                    )}
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => {
                   setProject(p => ({
                     ...p,
                     scenes: [...p.scenes, {
