@@ -442,8 +442,9 @@ async function renderVideoToBlob(
   }
 
   onProgress(95, "Finalizing video...");
-  audioElement.pause();
+  liveSource.stop();
   mediaRecorder.stop();
+  liveAudioCtx.close();
   audioCtx.close();
 
   return recordingDone;
