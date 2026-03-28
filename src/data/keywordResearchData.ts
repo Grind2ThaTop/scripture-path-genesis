@@ -356,7 +356,7 @@ export const VIRAL_KEYWORDS: ViralKeyword[] = [
     hook: "Unequally yoked doesn't just mean different religions. It means different STANDARDS.",
     angle: "If they don't fear Yahweh, they can't lead you. Period.",
     scriptures: ["2 Corinthians 6:14", "Amos 3:3", "Proverbs 31:30"],
-    tags: ["christian dating", "unequally yoked", "relationships"],
+    tags: ["biblical dating", "unequally yoked", "relationships"],
     audience_trigger: "romantic frustration",
     shorts_ready: true,
   },
