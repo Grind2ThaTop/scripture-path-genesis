@@ -65,6 +65,9 @@ const App = () => (
               <Route path="/prophecy" element={<ProphecyHub />} />
               <Route path="/viral" element={<ViralHub />} />
               <Route path="/topics" element={<TopicEngine />} />
+              <Route path="/leaderboard" element={<LeaderboardPage />} />
+              <Route path="/church" element={<ChurchPage />} />
+              <Route path="/admin" element={<AdminPage />} />
               <Route path="/life-situations" element={<LifeSituations />} />
               <Route path="/progress" element={<Progress />} />
               <Route path="*" element={<NotFound />} />
