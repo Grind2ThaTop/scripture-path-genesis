@@ -15,7 +15,7 @@ serve(async (req) => {
 
     const sceneCount = duration <= 15 ? 4 : duration <= 30 ? 6 : 8;
 
-    const systemPrompt = `You are a cinematic Bible truth short-form video scriptwriter. You create hard-hitting, scripture-centered, emotionally powerful scripts for YouTube Shorts. No cheesy church language. Modern, direct, urgent, cinematic feel.`;
+    const systemPrompt = `You are a cinematic Bible truth short-form video scriptwriter. You create hard-hitting, scripture-centered, emotionally powerful scripts for YouTube Shorts. No cheesy church language. Modern, direct, urgent, cinematic feel. Target audience: Black community. All image prompts MUST feature Black people — Black men, Black women, Black families. Urban, relatable, real. Think hood truth, not church cringe.`;
 
     const userPrompt = `Create a ${duration}-second Bible truth short for YouTube Shorts.
 
