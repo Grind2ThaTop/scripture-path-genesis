@@ -501,7 +501,75 @@ export default function ShortsEngine() {
     }));
   };
 
+  // Batch generate all scene images
+  const generateAllImages = async () => {
+    const scenesNeedingImages = project.scenes.filter(s => s.image_prompt && !s.generated_image_url);
+    if (scenesNeedingImages.length === 0) {
+      toast.info("All scenes already have images or need prompts");
+      return;
+    }
+    setBatchGenerating(true);
+    setBatchProgress({ current: 0, total: project.scenes.length, message: "Starting..." });
+
+    for (let i = 0; i < project.scenes.length; i++) {
+      const scene = project.scenes[i];
+      if (!scene.image_prompt || scene.generated_image_url) {
+        setBatchProgress(p => ({ ...p, current: i + 1, message: `Scene ${i + 1} skipped` }));
+        continue;
+      }
+      setBatchProgress({ current: i + 1, total: project.scenes.length, message: `Generating scene ${i + 1}...` });
+      try {
+        const { data, error } = await supabase.functions.invoke("shorts-media", {
+          body: { action: "generate_image", prompt: scene.image_prompt },
+        });
+        if (error) throw error;
+        if (data?.image_url) {
+          updateScene(i, { generated_image_url: data.image_url });
+        }
+      } catch (e: any) {
+        toast.error(`Scene ${i + 1} failed: ${e.message}`);
+      }
+    }
+    setBatchGenerating(false);
+    toast.success("All images generated!");
+  };
+
+  // Render and download video
+  const renderAndDownload = async () => {
+    if (project.scenes.length === 0) {
+      toast.error("No scenes to render");
+      return;
+    }
+    setRendering(true);
+    setRenderProgress({ pct: 0, message: "Preparing..." });
+
+    try {
+      const blob = await renderVideoToBlob(project.scenes, (pct, msg) => {
+        setRenderProgress({ pct, message: msg });
+      });
+
+      setRenderProgress({ pct: 100, message: "Download ready!" });
+
+      // Trigger download
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${project.title || "truth-short"}.webm`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      toast.success("Video downloaded!");
+    } catch (e: any) {
+      toast.error(`Render failed: ${e.message}`);
+    } finally {
+      setRendering(false);
+    }
+  };
+
   const totalDurationMs = project.scenes.reduce((sum, s) => sum + s.duration_ms, 0);
+  const scenesWithImages = project.scenes.filter(s => s.generated_image_url).length;
 
   if (!user) {
     return (
