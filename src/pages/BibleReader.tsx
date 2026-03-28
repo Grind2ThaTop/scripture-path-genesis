@@ -20,6 +20,10 @@ export default function BibleReader() {
   const [searchTerm, setSearchTerm] = useState('');
   const [testament, setTestament] = useState<Testament>('OT');
 
+  // Study Panel state
+  const [studyOpen, setStudyOpen] = useState(false);
+  const [studyVerse, setStudyVerse] = useState<{ ref: string; text: string; verse: number } | null>(null);
+
   // Init from URL params
   useEffect(() => {
     const bookParam = searchParams.get('book');
