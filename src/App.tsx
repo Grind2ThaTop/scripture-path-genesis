@@ -36,6 +36,7 @@ import OnboardingPage from "./pages/OnboardingPage";
 import LibraryPage from "./pages/LibraryPage";
 import MembersPage from "./pages/MembersPage";
 import DiscernmentPage from "./pages/DiscernmentPage";
+import YahwehIsOnePage from "./pages/YahwehIsOnePage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -78,6 +79,7 @@ const App = () => (
               <Route path="/library" element={<LibraryPage />} />
               <Route path="/members" element={<MembersPage />} />
               <Route path="/discernment" element={<DiscernmentPage />} />
+              <Route path="/yahweh-is-one" element={<YahwehIsOnePage />} />
               <Route path="/life-situations" element={<LifeSituations />} />
               <Route path="/progress" element={<Progress />} />
               <Route path="*" element={<NotFound />} />

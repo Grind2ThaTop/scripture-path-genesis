@@ -24,6 +24,7 @@ const navSections = [
   { label: 'Study', items: [
     { path: '/bible', label: 'Bible (KJV)', icon: Book },
     { path: '/discernment', label: 'Discernment', icon: Shield },
+    { path: '/yahweh-is-one', label: 'Yahweh Is One', icon: Crown },
     { path: '/daily', label: 'Daily Discipline', icon: Sword },
     { path: '/hebrew', label: 'Hebrew', icon: Languages },
     { path: '/greek', label: 'Greek', icon: GraduationCap },
