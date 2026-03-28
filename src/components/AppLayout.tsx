@@ -83,11 +83,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <div className={`p-4 border-b border-border flex items-center ${collapsed ? 'justify-center' : 'justify-between'}`}>
           {!collapsed && (
             <Link to="/" className="flex items-center gap-2">
-              <span className="text-gold text-xl font-display font-bold">דרך</span>
-              <span className="font-display text-foreground text-lg font-semibold">Derekh</span>
+              <img src={logoImg} alt="Derekh Emet" className="h-8 w-8 object-contain" />
+              <span className="font-display text-foreground text-lg font-semibold">Derekh Emet</span>
             </Link>
           )}
-          {collapsed && <span className="text-gold text-xl font-display font-bold">ד</span>}
+          {collapsed && (
+            <Link to="/">
+              <img src={logoImg} alt="Derekh Emet" className="h-7 w-7 object-contain" />
+            </Link>
+          )}
           <button
             onClick={() => setCollapsed(!collapsed)}
             className="hidden lg:flex text-muted-foreground hover:text-foreground transition-colors"
