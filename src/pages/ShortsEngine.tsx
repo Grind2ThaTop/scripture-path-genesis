@@ -98,6 +98,8 @@ export default function ShortsEngine() {
   });
   const [savedProjects, setSavedProjects] = useState<any[]>([]);
   const [expandedScene, setExpandedScene] = useState<number | null>(null);
+  const [generatingImage, setGeneratingImage] = useState<number | null>(null);
+  const [playingAudio, setPlayingAudio] = useState<number | null>(null);
 
   useEffect(() => {
     if (user) loadProjects();
@@ -110,6 +112,51 @@ export default function ShortsEngine() {
       .order("created_at", { ascending: false })
       .limit(20);
     if (data) setSavedProjects(data);
+  };
+
+  const generateSceneImage = async (sceneIndex: number) => {
+    const scene = project.scenes[sceneIndex];
+    if (!scene.image_prompt) { toast.error("Add an image prompt first"); return; }
+    setGeneratingImage(sceneIndex);
+    try {
+      const { data, error } = await supabase.functions.invoke("shorts-media", {
+        body: { action: "generate_image", prompt: scene.image_prompt },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      if (data?.image_url) {
+        updateScene(sceneIndex, { generated_image_url: data.image_url });
+        toast.success(`Scene ${sceneIndex + 1} image generated!`);
+      } else {
+        toast.info("Image generated but URL format may differ. Check console.");
+        console.log("AIMLAPI response:", data);
+      }
+    } catch (e: any) {
+      toast.error(e.message || "Failed to generate image");
+    } finally {
+      setGeneratingImage(null);
+    }
+  };
+
+  const previewVoice = async (sceneIndex: number) => {
+    const scene = project.scenes[sceneIndex];
+    if (!scene.narration_text) { toast.error("Add narration text first"); return; }
+    setPlayingAudio(sceneIndex);
+    try {
+      const { data, error } = await supabase.functions.invoke("shorts-media", {
+        body: { action: "generate_tts", text: scene.narration_text, voice: "alloy" },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      if (data?.audio_base64) {
+        const audio = new Audio(`data:audio/mpeg;base64,${data.audio_base64}`);
+        audio.onended = () => setPlayingAudio(null);
+        await audio.play();
+      }
+    } catch (e: any) {
+      toast.error(e.message || "Failed to generate voice");
+      setPlayingAudio(null);
+    }
   };
 
   const selectTopic = (preset: typeof TOPIC_PRESETS[0]) => {
@@ -606,12 +653,29 @@ export default function ShortsEngine() {
                               )}
 
                               <div className="flex gap-2">
-                                <Button variant="outline" size="sm" disabled>
-                                  <Image className="w-3.5 h-3.5 mr-1" /> Generate Image
-                                  <Badge variant="secondary" className="ml-2 text-[10px]">AIMLAPI</Badge>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => generateSceneImage(i)}
+                                  disabled={generatingImage === i}
+                                >
+                                  {generatingImage === i ? (
+                                    <><RefreshCw className="w-3.5 h-3.5 mr-1 animate-spin" /> Generating...</>
+                                  ) : (
+                                    <><Image className="w-3.5 h-3.5 mr-1" /> Generate Image</>
+                                  )}
                                 </Button>
-                                <Button variant="outline" size="sm" disabled>
-                                  <Play className="w-3.5 h-3.5 mr-1" /> Preview Voice
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => previewVoice(i)}
+                                  disabled={playingAudio === i}
+                                >
+                                  {playingAudio === i ? (
+                                    <><Volume2 className="w-3.5 h-3.5 mr-1 animate-pulse" /> Playing...</>
+                                  ) : (
+                                    <><Play className="w-3.5 h-3.5 mr-1" /> Preview Voice</>
+                                  )}
                                 </Button>
                               </div>
                             </CardContent>
