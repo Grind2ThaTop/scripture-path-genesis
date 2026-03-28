@@ -279,6 +279,20 @@ export default function BibleReader() {
           </button>
         </div>
       </div>
+
+      {/* Study Panel Drawer */}
+      {studyVerse && (
+        <StudyPanel
+          isOpen={studyOpen}
+          onClose={() => setStudyOpen(false)}
+          verseRef={studyVerse.ref}
+          verseText={studyVerse.text}
+          bookName={selectedBook.name}
+          chapter={chapter}
+          verse={studyVerse.verse}
+          testament={selectedBook.testament}
+        />
+      )}
     </div>
   );
 }
