@@ -112,7 +112,7 @@ serve(async (req) => {
       if (contentType.includes("application/json")) {
         // AIMLAPI returns JSON with audio URL
         const data = await response.json();
-        const audioUrl = data.url || data.audio_url || data.output;
+        const audioUrl = data.url || data.audio_url || data.output || data?.audio?.url;
         
         if (audioUrl) {
           // Fetch the actual audio and convert to base64
