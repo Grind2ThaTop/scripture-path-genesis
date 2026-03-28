@@ -399,6 +399,7 @@ export default function ShortsEngine() {
         ? musicPrompt 
         : BEAT_PRESETS.find(b => b.id === musicPreset)?.prompt || musicPrompt;
       
+      // Step 1: Submit
       const { data, error } = await supabase.functions.invoke("shorts-media", {
         body: { action: "generate_music", prompt: beatPrompt },
       });
@@ -409,14 +410,40 @@ export default function ShortsEngine() {
         setMusicUrl(data.audio_url);
         updateTask(taskId, { progress: 100, message: "Beat ready! 🔥", status: "done" });
         toast.success("Beat generated! Hit play to preview.");
-      } else if (data?.status === "processing") {
-        updateTask(taskId, { progress: 50, message: "Still cooking... may take a minute", status: "running" });
-        toast.info("Beat is still generating. Try again in a minute.");
-      } else {
-        console.log("Music response:", data);
-        updateTask(taskId, { progress: 100, message: "Done but no audio URL found", status: "error" });
-        toast.error("Music generated but couldn't find audio URL");
+        return;
       }
+
+      // Step 2: Poll until complete
+      const genId = data?.generation_id;
+      if (!genId) throw new Error("No generation ID returned");
+      
+      updateTask(taskId, { progress: 15, message: "Beat is cooking... 🔥" });
+      
+      for (let attempt = 0; attempt < 30; attempt++) {
+        await new Promise(r => setTimeout(r, 3000));
+        updateTask(taskId, { progress: 15 + (attempt / 30) * 75, message: `Generating beat... (${attempt * 3}s)` });
+        
+        const { data: pollData, error: pollError } = await supabase.functions.invoke("shorts-media", {
+          body: { action: "poll_music", generation_id: genId },
+        });
+        
+        if (pollError) { console.error("Poll error:", pollError); continue; }
+        if (pollData?.error) { console.error("Poll data error:", pollData.error); continue; }
+        
+        if (pollData?.status === "completed" && pollData?.audio_url) {
+          setMusicUrl(pollData.audio_url);
+          updateTask(taskId, { progress: 100, message: "Beat ready! 🔥", status: "done" });
+          toast.success("Beat generated! Hit play to preview. 🔥");
+          return;
+        }
+        
+        if (pollData?.status === "error") {
+          throw new Error("Music generation failed on server");
+        }
+      }
+      
+      updateTask(taskId, { progress: 100, message: "Timed out — try again", status: "error" });
+      toast.error("Beat generation timed out. Try again.");
     } catch (e: any) {
       updateTask(taskId, { progress: 100, message: e.message, status: "error" });
       toast.error(e.message || "Failed to generate beat");
