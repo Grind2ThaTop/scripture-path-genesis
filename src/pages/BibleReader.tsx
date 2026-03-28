@@ -5,6 +5,7 @@ import { restoreNames } from '@/lib/restoreNames';
 import { getHighlights, type Highlight } from '@/lib/highlights';
 import { preloadBookRefs } from '@/lib/crossReferences';
 import HighlightableVerse from '@/components/HighlightableVerse';
+import StudyPanel from '@/components/StudyPanel';
 import { BookOpen, ChevronLeft, ChevronRight, Search, Loader2 } from 'lucide-react';
 
 export default function BibleReader() {
@@ -18,6 +19,10 @@ export default function BibleReader() {
   const [showBookList, setShowBookList] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [testament, setTestament] = useState<Testament>('OT');
+
+  // Study Panel state
+  const [studyOpen, setStudyOpen] = useState(false);
+  const [studyVerse, setStudyVerse] = useState<{ ref: string; text: string; verse: number } | null>(null);
 
   // Init from URL params
   useEffect(() => {
@@ -229,17 +234,26 @@ export default function BibleReader() {
               {passage.verses.map(verse => {
                 const ref = `${selectedBook.name} ${chapter}`;
                 const existing = allHighlights.find(h => h.reference === `${ref}:${verse.verse}`);
+                const restoredText = restoreNames(verse.text);
                 return (
-                  <HighlightableVerse
+                  <div
                     key={verse.verse}
-                    verseNumber={verse.verse}
-                    text={restoreNames(verse.text)}
-                    reference={ref}
-                    source="bible"
-                    testament={selectedBook.testament}
-                    existingHighlight={existing}
-                    onHighlightChange={() => setAllHighlights(getHighlights())}
-                  />
+                    className="cursor-pointer"
+                    onClick={() => {
+                      setStudyVerse({ ref: `${ref}:${verse.verse}`, text: restoredText, verse: verse.verse });
+                      setStudyOpen(true);
+                    }}
+                  >
+                    <HighlightableVerse
+                      verseNumber={verse.verse}
+                      text={restoredText}
+                      reference={ref}
+                      source="bible"
+                      testament={selectedBook.testament}
+                      existingHighlight={existing}
+                      onHighlightChange={() => setAllHighlights(getHighlights())}
+                    />
+                  </div>
                 );
               })}
             </div>
@@ -265,6 +279,20 @@ export default function BibleReader() {
           </button>
         </div>
       </div>
+
+      {/* Study Panel Drawer */}
+      {studyVerse && (
+        <StudyPanel
+          isOpen={studyOpen}
+          onClose={() => setStudyOpen(false)}
+          verseRef={studyVerse.ref}
+          verseText={studyVerse.text}
+          bookName={selectedBook.name}
+          chapter={chapter}
+          verse={studyVerse.verse}
+          testament={selectedBook.testament}
+        />
+      )}
     </div>
   );
 }
