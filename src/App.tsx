@@ -28,6 +28,9 @@ import DailyDisciplinePage from "./pages/DailyDisciplinePage";
 import ProphecyHub from "./pages/ProphecyHub";
 import ViralHub from "./pages/ViralHub";
 import TopicEngine from "./pages/TopicEngine";
+import LeaderboardPage from "./pages/LeaderboardPage";
+import ChurchPage from "./pages/ChurchPage";
+import AdminPage from "./pages/AdminPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
