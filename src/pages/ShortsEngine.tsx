@@ -539,6 +539,8 @@ export default function ShortsEngine() {
   const [rendering, setRendering] = useState(false);
   const [renderProgress, setRenderProgress] = useState({ pct: 0, message: "" });
   const [renderedVideoUrl, setRenderedVideoUrl] = useState<string | null>(null);
+  const renderedVideoBlobRef = useRef<Blob | null>(null);
+  const renderedVideoExtRef = useRef<"mp4" | "webm">("webm");
   const [previewPlaying, setPreviewPlaying] = useState(false);
   const [musicUrl, setMusicUrl] = useState<string | null>(null);
   const [generatingMusic, setGeneratingMusic] = useState(false);
