@@ -26,6 +26,7 @@ import CommunityPage from "./pages/CommunityPage";
 import ProgressionPage from "./pages/ProgressionPage";
 import DailyDisciplinePage from "./pages/DailyDisciplinePage";
 import ProphecyHub from "./pages/ProphecyHub";
+import ViralHub from "./pages/ViralHub";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
