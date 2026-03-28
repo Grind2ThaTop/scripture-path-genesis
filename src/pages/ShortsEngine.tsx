@@ -299,7 +299,7 @@ export default function ShortsEngine() {
     duration: 30,
     style: "urban-prophetic",
     tone: "urgent",
-    voice_preset: "truth-narrator",
+    voice_preset: "onyx",
     cta: "Follow for truth",
     status: "draft",
     scenes: [],
@@ -358,7 +358,7 @@ export default function ShortsEngine() {
     setPlayingAudio(sceneIndex);
     try {
       const { data, error } = await supabase.functions.invoke("shorts-media", {
-        body: { action: "generate_tts", text: scene.narration_text, voice: "alloy" },
+        body: { action: "generate_tts", text: scene.narration_text, voice: project.voice_preset || "onyx" },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
@@ -1017,7 +1017,7 @@ export default function ShortsEngine() {
           <Card>
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
-                <Mic className="w-4 h-4" /> Voice Settings
+                <Mic className="w-4 h-4" /> Voice & Narration
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -1027,42 +1027,95 @@ export default function ShortsEngine() {
                   <Select value={project.voice_preset} onValueChange={v => setProject(p => ({ ...p, voice_preset: v }))}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="truth-narrator">Truth Narrator (Bold, Commanding)</SelectItem>
-                      <SelectItem value="warning-voice">Warning Voice (Urgent, Intense)</SelectItem>
-                      <SelectItem value="scripture-reader">Scripture Reader (Calm, Clear)</SelectItem>
-                      <SelectItem value="gentle-truth">Gentle Truth (Warm, Steady)</SelectItem>
-                      <SelectItem value="cinematic-intro">Cinematic Intro (Deep, Epic)</SelectItem>
+                      <SelectItem value="alloy">Alloy (Balanced, Clear)</SelectItem>
+                      <SelectItem value="echo">Echo (Warm, Resonant)</SelectItem>
+                      <SelectItem value="fable">Fable (Expressive, Story)</SelectItem>
+                      <SelectItem value="onyx">Onyx (Deep, Commanding)</SelectItem>
+                      <SelectItem value="nova">Nova (Warm, Friendly)</SelectItem>
+                      <SelectItem value="shimmer">Shimmer (Clear, Bright)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div>
-                  <label className="text-xs font-medium text-muted-foreground">TTS Provider</label>
-                  <Select defaultValue="aimlapi">
+                  <label className="text-xs font-medium text-muted-foreground">Speed</label>
+                  <Select defaultValue="1.0">
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="aimlapi">AIMLAPI TTS</SelectItem>
-                      <SelectItem value="elevenlabs">ElevenLabs</SelectItem>
+                      <SelectItem value="0.8">Slow (0.8x)</SelectItem>
+                      <SelectItem value="1.0">Normal (1.0x)</SelectItem>
+                      <SelectItem value="1.1">Slightly Fast (1.1x)</SelectItem>
+                      <SelectItem value="1.2">Fast (1.2x)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
 
-              <div className="p-4 rounded-lg bg-muted/50 border border-dashed">
-                <p className="text-sm text-muted-foreground text-center">
-                  🎙️ Voice generation will be powered by AIMLAPI or ElevenLabs.
-                  <br />Configure your API key in settings to enable narration.
-                </p>
+              <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/30 flex items-center gap-3">
+                <CheckCircle2 className="w-5 h-5 text-green-500 shrink-0" />
+                <div>
+                  <p className="text-sm font-medium">AIMLAPI TTS Connected</p>
+                  <p className="text-xs text-muted-foreground">Voice generation is ready. Preview individual scenes or generate all narration at once.</p>
+                </div>
               </div>
 
-              {project.scenes.length > 0 && (
-                <div className="space-y-2">
-                  <h3 className="text-sm font-semibold">Narration Preview</h3>
+              {project.scenes.length > 0 ? (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-semibold">Scene Narration</h3>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={async () => {
+                        const taskId = `narration-all-${Date.now()}`;
+                        addTask({ id: taskId, label: "Generating all narration", module: "Shorts", progress: 0, message: "Starting...", status: "running" });
+                        for (let i = 0; i < project.scenes.length; i++) {
+                          if (!project.scenes[i].narration_text) continue;
+                          updateTask(taskId, { progress: ((i + 0.5) / project.scenes.length) * 100, message: `Scene ${i + 1}/${project.scenes.length}...` });
+                          await previewVoice(i);
+                          // Small delay between scenes
+                          await new Promise(r => setTimeout(r, 500));
+                          updateTask(taskId, { progress: ((i + 1) / project.scenes.length) * 100 });
+                        }
+                        updateTask(taskId, { progress: 100, message: "All narration generated!", status: "done" });
+                        toast.success("All narration previewed!");
+                      }}
+                      disabled={playingAudio !== null}
+                    >
+                      <Volume2 className="w-3.5 h-3.5 mr-1" /> Play All Narration
+                    </Button>
+                  </div>
                   {project.scenes.map((scene, i) => (
-                    <div key={i} className="flex items-start gap-3 p-2 rounded-lg hover:bg-muted/30">
+                    <div key={i} className="flex items-start gap-3 p-3 rounded-lg border bg-muted/20">
                       <Badge variant="outline" className="mt-0.5 shrink-0">{i + 1}</Badge>
-                      <p className="text-sm">{scene.narration_text}</p>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm">{scene.narration_text || <span className="text-muted-foreground italic">No narration text</span>}</p>
+                        {scene.verse_reference && (
+                          <p className="text-xs text-muted-foreground mt-1">📖 {scene.verse_reference}</p>
+                        )}
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="shrink-0 h-8 w-8"
+                        onClick={() => previewVoice(i)}
+                        disabled={playingAudio === i}
+                      >
+                        {playingAudio === i ? (
+                          <Volume2 className="w-4 h-4 animate-pulse text-primary" />
+                        ) : (
+                          <Play className="w-4 h-4" />
+                        )}
+                      </Button>
                     </div>
                   ))}
+                </div>
+              ) : (
+                <div className="p-6 text-center text-muted-foreground">
+                  <Mic className="w-10 h-10 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">Generate a script first to see narration scenes here.</p>
+                  <Button variant="outline" size="sm" className="mt-2" onClick={() => setActiveTab("create")}>
+                    <ArrowLeft className="w-3.5 h-3.5 mr-1" /> Go to Create
+                  </Button>
                 </div>
               )}
             </CardContent>

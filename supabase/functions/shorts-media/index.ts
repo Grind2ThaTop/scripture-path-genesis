@@ -85,11 +85,10 @@ serve(async (req) => {
     }
 
     if (action === "generate_tts") {
-      // Text-to-speech via AIMLAPI
       const ttsModel = model || "openai/tts-1";
-      const ttsVoice = voice || "alloy";
+      const ttsVoice = voice || "onyx";
 
-      const response = await fetch("https://api.aimlapi.com/v1/audio/speech", {
+      const response = await fetch("https://api.aimlapi.com/v1/tts", {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${AIMLAPI_API_KEY}`,
@@ -97,9 +96,8 @@ serve(async (req) => {
         },
         body: JSON.stringify({
           model: ttsModel,
-          input: text,
+          text: text,
           voice: ttsVoice,
-          response_format: "mp3",
         }),
       });
 
@@ -109,18 +107,44 @@ serve(async (req) => {
         throw new Error(`TTS generation failed: ${response.status}`);
       }
 
-      // Return audio as base64
-      const audioBuffer = await response.arrayBuffer();
-      const uint8 = new Uint8Array(audioBuffer);
-      let binary = "";
-      for (let i = 0; i < uint8.length; i++) {
-        binary += String.fromCharCode(uint8[i]);
+      const contentType = response.headers.get("content-type") || "";
+      
+      if (contentType.includes("application/json")) {
+        // AIMLAPI returns JSON with audio URL
+        const data = await response.json();
+        const audioUrl = data.url || data.audio_url || data.output || data?.audio?.url;
+        
+        if (audioUrl) {
+          // Fetch the actual audio and convert to base64
+          const audioResp = await fetch(audioUrl);
+          const audioBuffer = await audioResp.arrayBuffer();
+          const uint8 = new Uint8Array(audioBuffer);
+          let binary = "";
+          for (let i = 0; i < uint8.length; i++) {
+            binary += String.fromCharCode(uint8[i]);
+          }
+          const base64Audio = btoa(binary);
+          return new Response(JSON.stringify({ success: true, audio_base64: base64Audio, audio_url: audioUrl, format: "mp3" }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        
+        return new Response(JSON.stringify({ success: true, raw: data }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      } else {
+        // Direct audio binary response
+        const audioBuffer = await response.arrayBuffer();
+        const uint8 = new Uint8Array(audioBuffer);
+        let binary = "";
+        for (let i = 0; i < uint8.length; i++) {
+          binary += String.fromCharCode(uint8[i]);
+        }
+        const base64Audio = btoa(binary);
+        return new Response(JSON.stringify({ success: true, audio_base64: base64Audio, format: "mp3" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
       }
-      const base64Audio = btoa(binary);
-
-      return new Response(JSON.stringify({ success: true, audio_base64: base64Audio, format: "mp3" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
     }
 
     throw new Error(`Unknown action: ${action}`);
