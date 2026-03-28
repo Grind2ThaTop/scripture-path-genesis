@@ -15,7 +15,7 @@ import { Slider } from "@/components/ui/slider";
 import { Progress } from "@/components/ui/progress";
 import {
   Video, Sparkles, Film, Mic, Download, Plus, Trash2, RefreshCw,
-  ChevronUp, ChevronDown, Image, Type, Clock, Zap, Play, ArrowLeft,
+  ChevronUp, ChevronDown, Image as ImageIcon, Type, Clock, Zap, Play, ArrowLeft,
   Wand2, Settings, Volume2, FileVideo, Hash, Eye, Loader2, CheckCircle2,
   Square, Pause
 } from "lucide-react";
