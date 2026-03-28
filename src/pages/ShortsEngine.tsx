@@ -1056,10 +1056,86 @@ export default function ShortsEngine() {
 
         {/* EXPORT TAB */}
         <TabsContent value="export" className="space-y-4 mt-4">
-          <Card>
-            <CardHeader>
+          {/* Render & Download */}
+          <Card className="border-primary/30">
+            <CardHeader className="pb-3">
               <CardTitle className="text-lg flex items-center gap-2">
-                <Download className="w-4 h-4" /> Export Settings
+                <FileVideo className="w-5 h-5 text-primary" /> Render & Download Video
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <Card className="p-3 text-center bg-muted/30">
+                  <p className="text-2xl font-bold">{project.scenes.length}</p>
+                  <p className="text-xs text-muted-foreground">Scenes</p>
+                </Card>
+                <Card className="p-3 text-center bg-muted/30">
+                  <p className="text-2xl font-bold">{(totalDurationMs / 1000).toFixed(0)}s</p>
+                  <p className="text-xs text-muted-foreground">Duration</p>
+                </Card>
+                <Card className="p-3 text-center bg-muted/30">
+                  <p className="text-2xl font-bold">{scenesWithImages}/{project.scenes.length}</p>
+                  <p className="text-xs text-muted-foreground">Images Ready</p>
+                </Card>
+                <Card className="p-3 text-center bg-muted/30">
+                  <p className="text-2xl font-bold">9:16</p>
+                  <p className="text-xs text-muted-foreground">1080×1920</p>
+                </Card>
+              </div>
+
+              {scenesWithImages < project.scenes.length && project.scenes.length > 0 && (
+                <div className="p-3 rounded-lg bg-orange-500/10 border border-orange-500/30 flex items-center gap-3">
+                  <Loader2 className="w-5 h-5 text-orange-500 shrink-0" />
+                  <div>
+                    <p className="text-sm font-medium">Missing scene images</p>
+                    <p className="text-xs text-muted-foreground">
+                      {project.scenes.length - scenesWithImages} scene(s) need images. Go to Scenes tab and click "Generate All Images" first.
+                    </p>
+                  </div>
+                  <Button size="sm" variant="outline" onClick={() => setActiveTab("scenes")} className="shrink-0 ml-auto">
+                    Go to Scenes
+                  </Button>
+                </div>
+              )}
+
+              {rendering && (
+                <div className="p-4 rounded-lg border bg-muted/20 space-y-3">
+                  <div className="flex items-center gap-3">
+                    <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">{renderProgress.message}</p>
+                      <p className="text-xs text-muted-foreground">{Math.round(renderProgress.pct)}% complete</p>
+                    </div>
+                  </div>
+                  <Progress value={renderProgress.pct} className="h-3" />
+                </div>
+              )}
+
+              <div className="flex gap-3">
+                <Button
+                  className="flex-1 h-14 text-lg font-bold bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
+                  onClick={renderAndDownload}
+                  disabled={rendering || project.scenes.length === 0}
+                >
+                  {rendering ? (
+                    <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> Rendering Video...</>
+                  ) : (
+                    <><Download className="w-5 h-5 mr-2" /> Render & Download Video</>
+                  )}
+                </Button>
+              </div>
+
+              <p className="text-xs text-muted-foreground text-center">
+                Renders as WebM video with motion effects and burned-in captions. Ready for YouTube Shorts upload.
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* YouTube Metadata */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Hash className="w-4 h-4" /> YouTube Metadata
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -1073,9 +1149,7 @@ export default function ShortsEngine() {
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-medium text-muted-foreground">
-                    <Hash className="w-3 h-3 inline mr-1" />Hashtags
-                  </label>
+                  <label className="text-xs font-medium text-muted-foreground">Hashtags</label>
                   <Input
                     value={(project.hashtags || []).join(" ")}
                     onChange={e => setProject(p => ({ ...p, hashtags: e.target.value.split(" ").filter(Boolean) }))}
@@ -1093,37 +1167,19 @@ export default function ShortsEngine() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <Card className="p-3 text-center">
-                  <p className="text-2xl font-bold">{project.scenes.length}</p>
-                  <p className="text-xs text-muted-foreground">Scenes</p>
-                </Card>
-                <Card className="p-3 text-center">
-                  <p className="text-2xl font-bold">{(totalDurationMs / 1000).toFixed(0)}s</p>
-                  <p className="text-xs text-muted-foreground">Duration</p>
-                </Card>
-                <Card className="p-3 text-center">
-                  <p className="text-2xl font-bold">1080×1920</p>
-                  <p className="text-xs text-muted-foreground">Resolution</p>
-                </Card>
-                <Card className="p-3 text-center">
-                  <p className="text-2xl font-bold">9:16</p>
-                  <p className="text-xs text-muted-foreground">Aspect Ratio</p>
-                </Card>
-              </div>
-
-              <div className="p-4 rounded-lg bg-muted/50 border border-dashed text-center">
-                <FileVideo className="w-10 h-10 mx-auto mb-2 text-primary" />
-                <p className="text-sm text-muted-foreground">
-                  AIMLAPI is connected. Generate images and narration for each scene first, then export.
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Full MP4 video assembly coming in V2 — for now, export individual scene assets.
-                </p>
-                <Button className="mt-3" variant="outline" disabled={project.scenes.length === 0}>
-                  <Download className="w-4 h-4 mr-2" /> Download Scene Assets
+              {(project.youtube_title || project.youtube_description) && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const text = `${project.youtube_title || ""}\n\n${project.youtube_description || ""}\n\n${(project.hashtags || []).join(" ")}`;
+                    navigator.clipboard.writeText(text);
+                    toast.success("Copied to clipboard!");
+                  }}
+                >
+                  📋 Copy Title + Description + Hashtags
                 </Button>
-              </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
