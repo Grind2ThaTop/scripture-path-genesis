@@ -176,8 +176,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <Menu size={22} />
           </button>
           <Link to="/" className="flex items-center gap-2">
-            <span className="text-gold text-lg font-display font-bold">דרך</span>
-            <span className="font-display text-foreground font-semibold">Derekh</span>
+            <img src={logoImg} alt="Derekh Emet" className="h-7 w-7 object-contain" />
+            <span className="font-display text-foreground font-semibold">Derekh Emet</span>
           </Link>
           <div className="w-6" />
         </header>
