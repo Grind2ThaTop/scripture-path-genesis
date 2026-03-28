@@ -147,6 +147,88 @@ serve(async (req) => {
       }
     }
 
+    if (action === "generate_music") {
+      // Step 1: Submit music generation request
+      const musicModel = model || "minimax-music";
+      const musicPrompt = prompt || "dark trap beat, 808 bass, hard hitting drums, cinematic, aggressive, hood energy";
+      
+      const submitResponse = await fetch("https://api.aimlapi.com/v2/generate/audio", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${AIMLAPI_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: musicModel,
+          prompt: musicPrompt,
+          duration_seconds: 30,
+        }),
+      });
+
+      if (!submitResponse.ok) {
+        const errText = await submitResponse.text();
+        console.error("AIMLAPI music submit error:", submitResponse.status, errText);
+        throw new Error(`Music generation submit failed: ${submitResponse.status} - ${errText}`);
+      }
+
+      const submitData = await submitResponse.json();
+      console.log("Music submit response:", JSON.stringify(submitData));
+      
+      // The API returns a generation_id for async polling
+      const generationId = submitData.id || submitData.generation_id || submitData.task_id;
+      
+      if (!generationId) {
+        // Some models return audio directly
+        const directUrl = submitData.audio_url || submitData.url || submitData?.data?.[0]?.url || submitData?.output;
+        if (directUrl) {
+          return new Response(JSON.stringify({ success: true, audio_url: directUrl, status: "completed" }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        return new Response(JSON.stringify({ success: true, raw: submitData, status: "unknown" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Step 2: Poll for completion (up to 60 seconds)
+      for (let attempt = 0; attempt < 20; attempt++) {
+        await new Promise(r => setTimeout(r, 3000));
+        
+        const pollResponse = await fetch(`https://api.aimlapi.com/v2/generate/audio?generation_id=${generationId}`, {
+          method: "GET",
+          headers: {
+            "Authorization": `Bearer ${AIMLAPI_API_KEY}`,
+          },
+        });
+
+        if (!pollResponse.ok) {
+          console.error("Poll error:", pollResponse.status);
+          continue;
+        }
+
+        const pollData = await pollResponse.json();
+        console.log("Poll response:", JSON.stringify(pollData));
+        
+        const status = pollData.status || pollData.state;
+        
+        if (status === "completed" || status === "succeeded" || status === "done") {
+          const audioUrl = pollData.audio_url || pollData.url || pollData?.audio?.url || pollData?.output || pollData?.audio_file?.url;
+          return new Response(JSON.stringify({ success: true, audio_url: audioUrl, status: "completed", raw: pollData }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        
+        if (status === "failed" || status === "error") {
+          throw new Error(`Music generation failed: ${JSON.stringify(pollData)}`);
+        }
+      }
+
+      // Return the generation_id so client can poll manually
+      return new Response(JSON.stringify({ success: true, generation_id: generationId, status: "processing", message: "Still generating. Try polling later." }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     throw new Error(`Unknown action: ${action}`);
   } catch (e) {
     console.error("shorts-media error:", e);
