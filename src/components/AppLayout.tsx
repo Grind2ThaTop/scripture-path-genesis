@@ -90,8 +90,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 p-2 space-y-1">
-          {navItems.map((item) => {
+        <nav className="flex-1 p-2 space-y-1 overflow-y-auto">
+          {navItems
+            .filter((item) => !('adminOnly' in item && item.adminOnly) || isAdmin)
+            .map((item) => {
             const active = location.pathname === item.path ||
               (item.path !== '/' && location.pathname.startsWith(item.path));
             return (
