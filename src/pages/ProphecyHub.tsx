@@ -26,6 +26,7 @@ const CATEGORY_META: Record<string, { label: string; icon: any; color: string }>
 
 export default function ProphecyHub() {
   const { user } = useAuth();
+  const { isAdmin } = useIsAdmin();
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
 
