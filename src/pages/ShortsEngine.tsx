@@ -72,6 +72,7 @@ interface Scene {
   motion_type: string;
   duration_ms: number;
   transition_type?: string;
+  audio_base64?: string;
 }
 
 interface ShortProject {
