@@ -5,6 +5,7 @@ import { restoreNames } from '@/lib/restoreNames';
 import { getHighlights, type Highlight } from '@/lib/highlights';
 import { preloadBookRefs } from '@/lib/crossReferences';
 import HighlightableVerse from '@/components/HighlightableVerse';
+import StudyPanel from '@/components/StudyPanel';
 import { BookOpen, ChevronLeft, ChevronRight, Search, Loader2 } from 'lucide-react';
 
 export default function BibleReader() {
