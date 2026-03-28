@@ -18,7 +18,7 @@ import {
   Video, Sparkles, Film, Mic, Download, Plus, Trash2, RefreshCw,
   ChevronUp, ChevronDown, Image as ImageIcon, Type, Clock, Zap, Play, ArrowLeft,
   Wand2, Settings, Volume2, FileVideo, Hash, Eye, Loader2, CheckCircle2,
-  Square, Pause
+  Square, Pause, Music
 } from "lucide-react";
 
 const TOPIC_PRESETS = [
