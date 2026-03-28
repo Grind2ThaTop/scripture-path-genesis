@@ -594,23 +594,71 @@ export default function ShortsEngine() {
     }
   };
 
+  const generateSceneVoiceAudio = async (scene: Scene) => {
+    const narration = scene.narration_text?.trim();
+    if (!narration) return null;
+
+    const { data, error } = await supabase.functions.invoke("shorts-media", {
+      body: { action: "generate_tts", text: narration, voice: project.voice_preset || "onyx" },
+    });
+
+    if (error) throw error;
+    if (data?.error) throw new Error(data.error);
+    if (!data?.audio_base64) throw new Error("No narration audio returned");
+
+    return data.audio_base64 as string;
+  };
+
+  const ensureSceneAudio = async (scenes: Scene[], taskId?: string) => {
+    const narratedSceneCount = scenes.filter((scene) => scene.narration_text?.trim()).length;
+    if (narratedSceneCount === 0) return scenes;
+
+    const nextScenes = [...scenes];
+    let completed = 0;
+
+    for (let i = 0; i < nextScenes.length; i++) {
+      const scene = nextScenes[i];
+      if (!scene.narration_text?.trim()) continue;
+
+      if (!scene.audio_base64) {
+        const audio_base64 = await generateSceneVoiceAudio(scene);
+        if (audio_base64) {
+          nextScenes[i] = { ...scene, audio_base64 };
+          setProject((current) => ({
+            ...current,
+            scenes: current.scenes.map((existing, index) =>
+              index === i ? { ...existing, audio_base64 } : existing,
+            ),
+          }));
+        }
+      }
+
+      completed += 1;
+      if (taskId) {
+        const progress = Math.round(5 + (completed / narratedSceneCount) * 15);
+        const message = narratedSceneCount === 1
+          ? "Narration locked in..."
+          : `Building narration ${completed}/${narratedSceneCount}...`;
+        setRenderProgress({ pct: progress, message });
+        updateTask(taskId, { progress, message });
+      }
+    }
+
+    return nextScenes;
+  };
+
   const previewVoice = async (sceneIndex: number) => {
     const scene = project.scenes[sceneIndex];
     if (!scene.narration_text) { toast.error("Add narration text first"); return; }
     setPlayingAudio(sceneIndex);
     try {
-      const { data, error } = await supabase.functions.invoke("shorts-media", {
-        body: { action: "generate_tts", text: scene.narration_text, voice: project.voice_preset || "onyx" },
-      });
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-      if (data?.audio_base64) {
-        // Store audio on scene for video rendering
-        updateScene(sceneIndex, { audio_base64: data.audio_base64 } as any);
-        const audio = new Audio(`data:audio/mpeg;base64,${data.audio_base64}`);
-        audio.onended = () => setPlayingAudio(null);
-        await audio.play();
-      }
+      const audioBase64 = await generateSceneVoiceAudio(scene);
+      if (!audioBase64) throw new Error("No narration audio returned");
+
+      updateScene(sceneIndex, { audio_base64: audioBase64 } as any);
+      const audio = new Audio(`data:audio/mpeg;base64,${audioBase64}`);
+      audio.onended = () => setPlayingAudio(null);
+      await audio.play();
     } catch (e: any) {
       toast.error(e.message || "Failed to generate voice");
       setPlayingAudio(null);
