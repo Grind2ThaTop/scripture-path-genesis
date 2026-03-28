@@ -5,7 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import {
   BookOpen, GraduationCap, Languages, BarChart3,
   ChevronLeft, ChevronRight, Menu, X, Home, Compass, Book, Highlighter,
-  Search, StickyNote, Flame, LogIn, LogOut, User, Share2, Users, Crown, Sword, Eye, Zap
+  Search, StickyNote, Flame, LogIn, LogOut, User, Share2, Users, Crown, Sword, Eye, Zap, Target
 } from 'lucide-react';
 
 const navItems = [
