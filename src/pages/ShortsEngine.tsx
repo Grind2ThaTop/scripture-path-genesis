@@ -806,12 +806,15 @@ export default function ShortsEngine() {
               </div>
 
               <div className="p-4 rounded-lg bg-muted/50 border border-dashed text-center">
-                <FileVideo className="w-10 h-10 mx-auto mb-2 text-muted-foreground" />
+                <FileVideo className="w-10 h-10 mx-auto mb-2 text-primary" />
                 <p className="text-sm text-muted-foreground">
-                  Video rendering will be available once AIMLAPI is connected for image/video generation.
+                  AIMLAPI is connected. Generate images and narration for each scene first, then export.
                 </p>
-                <Button className="mt-3" disabled>
-                  <Download className="w-4 h-4 mr-2" /> Export MP4
+                <p className="text-xs text-muted-foreground mt-1">
+                  Full MP4 video assembly coming in V2 — for now, export individual scene assets.
+                </p>
+                <Button className="mt-3" variant="outline" disabled={project.scenes.length === 0}>
+                  <Download className="w-4 h-4 mr-2" /> Download Scene Assets
                 </Button>
               </div>
             </CardContent>
