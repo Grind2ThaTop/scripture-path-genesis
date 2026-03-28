@@ -390,6 +390,55 @@ export default function ShortsEngine() {
     }
   };
 
+  const generateMusic = async () => {
+    setGeneratingMusic(true);
+    const taskId = `music-${Date.now()}`;
+    addTask({ id: taskId, label: "Generating beat", module: "Shorts", progress: 0, message: "Submitting to AI...", status: "running" });
+    try {
+      const beatPrompt = musicPreset === "custom" 
+        ? musicPrompt 
+        : BEAT_PRESETS.find(b => b.id === musicPreset)?.prompt || musicPrompt;
+      
+      const { data, error } = await supabase.functions.invoke("shorts-media", {
+        body: { action: "generate_music", prompt: beatPrompt },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      
+      if (data?.audio_url) {
+        setMusicUrl(data.audio_url);
+        updateTask(taskId, { progress: 100, message: "Beat ready! 🔥", status: "done" });
+        toast.success("Beat generated! Hit play to preview.");
+      } else if (data?.status === "processing") {
+        updateTask(taskId, { progress: 50, message: "Still cooking... may take a minute", status: "running" });
+        toast.info("Beat is still generating. Try again in a minute.");
+      } else {
+        console.log("Music response:", data);
+        updateTask(taskId, { progress: 100, message: "Done but no audio URL found", status: "error" });
+        toast.error("Music generated but couldn't find audio URL");
+      }
+    } catch (e: any) {
+      updateTask(taskId, { progress: 100, message: e.message, status: "error" });
+      toast.error(e.message || "Failed to generate beat");
+    } finally {
+      setGeneratingMusic(false);
+    }
+  };
+
+  const toggleMusicPlayback = () => {
+    if (!musicUrl) return;
+    if (musicPlaying && musicAudioRef.current) {
+      musicAudioRef.current.pause();
+      setMusicPlaying(false);
+    } else {
+      const audio = new Audio(musicUrl);
+      audio.onended = () => setMusicPlaying(false);
+      musicAudioRef.current = audio;
+      audio.play();
+      setMusicPlaying(true);
+    }
+  };
+
   const selectTopic = (preset: typeof TOPIC_PRESETS[0]) => {
     setProject(p => ({
       ...p,
