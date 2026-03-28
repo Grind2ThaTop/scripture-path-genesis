@@ -13,6 +13,7 @@ import { useIsAdmin } from '@/hooks/useIsAdmin';
 const navSections = [
   { label: 'Home', items: [
     { path: '/', label: 'Dashboard', icon: Home },
+    { path: '/search', label: 'Search', icon: Search },
     { path: '/community', label: 'Community', icon: Users },
     { path: '/calendar', label: 'Calendar', icon: CalendarDays },
     { path: '/church', label: 'Prayer', icon: HandHeart },
